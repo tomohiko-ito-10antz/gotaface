@@ -1,0 +1,13 @@
+version: "3.5"
+
+services:
+  work:
+    build: 
+      context: "../"
+      dockerfile: Dockerfile-work
+    working_dir: "/work/"
+    command: ["sleep", "infinity"]
+    volumes:
+      - "../:/work/:delegated"
+    #ports:
+    #  - "8080:80"

@@ -1,0 +1,14 @@
+version: "3.5"
+
+services:
+  work-remote:
+    build: 
+      context: "../"
+      dockerfile: Dockerfile-work
+    working_dir: "/work/"
+    command: ["/usr/sbin/sshd", "-D", "-e", "-f", "/etc/ssh/sshd_config_test_goland"]
+    volumes:
+      - "../:/work/:delegated"
+    ports:
+      - "127.0.0.1:2222:22"
+    #  - "8080:80"
