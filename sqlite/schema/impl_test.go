@@ -4,29 +4,31 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	schema2 "github.com/Jumpaku/gotaface/schema"
-	"github.com/Jumpaku/gotaface/sqlite/schema"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/oklog/ulid/v2"
-	"golang.org/x/exp/slices"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/davecgh/go-spew/spew"
+
+	"github.com/Jumpaku/gotaface/schema"
+	schema_impl "github.com/Jumpaku/gotaface/sqlite/schema"
+
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/oklog/ulid/v2"
+	"golang.org/x/exp/slices"
 )
 
-var db *sql.DB
-
-func TestMain(m *testing.M) {
-	initialize()
-	os.Exit(m.Run())
-}
-
-const envTestSQLiteSchemaDBDir = "GOTAFACE_TEST_SQLITE_SCHEMA"
+const envTestSQLiteSchemaDBDir = "GOTAFACE_TEST_SQLITE_SCHEMA_DB_DIR"
 
 var (
 	skipTest  bool
 	testDBDir string
 )
+
+func TestMain(m *testing.M) {
+	initialize()
+	os.Exit(m.Run())
+}
 
 func initialize() {
 	if os.Getenv(envTestSQLiteSchemaDBDir) == "" {
@@ -66,7 +68,7 @@ func TestLister_List(t *testing.T) {
 	defer tearDown()
 
 	_, err := db.Exec(`
-CREATE TABLE t1 (
+CREATE TABLE t0 (
   id1 INT,
   id2 INT,
   col_integer INTEGER,
@@ -75,77 +77,134 @@ CREATE TABLE t1 (
   col_blob BLOB,
   PRIMARY KEY (id1, id2));
   
+CREATE TABLE t1 (
+  id INT,
+  PRIMARY KEY (id),
+  FOREIGN KEY (id) REFERENCES t0 (id1));
+  
 CREATE TABLE t2 (
   id INT,
   PRIMARY KEY (id),
-  FOREIGN KEY (id) REFERENCES t1 (id1));
+  FOREIGN KEY (id) REFERENCES t0 (id2));
   
 CREATE TABLE t3 (
-  id INT,
-  PRIMARY KEY (id),
-  FOREIGN KEY (id) REFERENCES t1 (id2));
-  
-CREATE TABLE t4 (
   id INT,
   col1 INT,
   col2 INT,
   PRIMARY KEY (id),
-  FOREIGN KEY (col1) REFERENCES t2 (id),
-  FOREIGN KEY (col2) REFERENCES t3 (id));
+  FOREIGN KEY (col1) REFERENCES t1 (id),
+  FOREIGN KEY (col2) REFERENCES t2 (id));
  
-CREATE TABLE t5 (
+CREATE TABLE t4 (
   id INT,
   PRIMARY KEY (id));
   
-CREATE TABLE t6 (
+CREATE TABLE t5 (
   id1 INT,
   id2 INT,
   PRIMARY KEY (id1, id2),
-  FOREIGN KEY (id1) REFERENCES t5 (id));
+  FOREIGN KEY (id1) REFERENCES t4 (id));
 
-CREATE TABLE t7 (
+CREATE TABLE t6 (
   id1 INT,
   id2 INT,
   id3 INT,
   PRIMARY KEY (id1, id2, id3),
-  FOREIGN KEY (id1, id2) REFERENCES t6 (id1, id2));
+  FOREIGN KEY (id1, id2) REFERENCES t5 (id1, id2));
 `)
 	if err != nil {
 		tearDown()
 		t.Fatal("fail to list tables: %w", err)
 	}
 
-	sut := schema.NewFetcher(db)
+	sut := schema_impl.NewFetcher(db)
 
 	got, err := sut.Fetch(context.Background())
 	if err != nil {
 		tearDown()
 		t.Fatal("fail to list tables: %w", err)
 	}
-	wantTables := []schema2.Table{}
-	wantReferences := [][]int{}
-	if len(got.Tables()) != 7 {
-		tearDown()
-		t.Fatal(fmt.Sprintf(`too few tables: %d`, len(got.Tables())))
+	wantTables := []schema.Table{
+		schema_impl.Table{
+			NameVal: "t0",
+			ColumnsVal: []schema.Column{
+				schema_impl.Column{NameVal: "id1", TypeVal: "INT"},
+				schema_impl.Column{NameVal: "id2", TypeVal: "INT"},
+				schema_impl.Column{NameVal: "col_integer", TypeVal: "INTEGER"},
+				schema_impl.Column{NameVal: "col_text", TypeVal: "TEXT"},
+				schema_impl.Column{NameVal: "col_real", TypeVal: "REAL"},
+				schema_impl.Column{NameVal: "col_blob", TypeVal: "BLOB"},
+			},
+			PrimaryKeyVal: []int{0, 1},
+		},
+		schema_impl.Table{
+			NameVal: "t1",
+			ColumnsVal: []schema.Column{
+				schema_impl.Column{NameVal: "id", TypeVal: "INT"},
+			},
+			PrimaryKeyVal: []int{0},
+		},
+		schema_impl.Table{
+			NameVal: "t2",
+			ColumnsVal: []schema.Column{
+				schema_impl.Column{NameVal: "id", TypeVal: "INT"},
+			},
+			PrimaryKeyVal: []int{0},
+		},
+		schema_impl.Table{
+			NameVal: "t3",
+			ColumnsVal: []schema.Column{
+				schema_impl.Column{NameVal: "id", TypeVal: "INT"},
+				schema_impl.Column{NameVal: "col1", TypeVal: "INT"},
+				schema_impl.Column{NameVal: "col2", TypeVal: "INT"},
+			},
+			PrimaryKeyVal: []int{0},
+		},
+		schema_impl.Table{
+			NameVal: "t4",
+			ColumnsVal: []schema.Column{
+				schema_impl.Column{NameVal: "id", TypeVal: "INT"},
+			},
+			PrimaryKeyVal: []int{0},
+		},
+		schema_impl.Table{
+			NameVal: "t5",
+			ColumnsVal: []schema.Column{
+				schema_impl.Column{NameVal: "id1", TypeVal: "INT"},
+				schema_impl.Column{NameVal: "id2", TypeVal: "INT"},
+			},
+			PrimaryKeyVal: []int{0, 1},
+		},
+		schema_impl.Table{
+			NameVal: "t6",
+			ColumnsVal: []schema.Column{
+				schema_impl.Column{NameVal: "id1", TypeVal: "INT"},
+				schema_impl.Column{NameVal: "id2", TypeVal: "INT"},
+				schema_impl.Column{NameVal: "id3", TypeVal: "INT"},
+			},
+			PrimaryKeyVal: []int{0, 1, 2},
+		},
 	}
-	for _, want := range wantTables {
-		if !containsTable(t, got.Tables(), want) {
+	wantReferences := [][]int{{}, {0}, {0}, {1, 2}, {}, {4}, {5}}
+
+	gotTables := got.Tables()
+	if len(gotTables) != len(wantTables) {
+		tearDown()
+		t.Fatalf("table count not match\n  len(gotTables) = %v\n  len(wantTables) = %v", len(gotTables), len(wantTables))
+	}
+
+	for i, want := range wantTables {
+		if !equalsTable(t, gotTables[i], want) {
 			tearDown()
-			t.Fatalf(`Table not found %s`, want.Name())
+			t.Fatalf("Table[%d] = %s not match\n  got = %v\n  want = %v", i, want.Name(), spew.Sdump(gotTables[i]), spew.Sdump(want))
 		}
 	}
 
-	if !equalsReferences(t, got.References(), wantReferences) {
+	gotReferences := got.References()
+	if !equalsReferences(t, gotReferences, wantReferences) {
 		tearDown()
-		t.Fatalf(`Referencces not match %#v`, wantReferences)
+		t.Fatalf("Referencces not match\n  got = %#v\n  want = %#v", spew.Sdump(gotReferences), spew.Sdump(wantReferences))
 	}
-}
-
-func containsTable(t *testing.T, gotTables []schema2.Table, want schema2.Table) bool {
-	t.Helper()
-	return slices.ContainsFunc(gotTables, func(got schema2.Table) bool {
-		return equalsTable(t, got, want)
-	})
 }
 
 func equalsReferences(t *testing.T, got [][]int, want [][]int) bool {
@@ -168,13 +227,13 @@ func equalsReferences(t *testing.T, got [][]int, want [][]int) bool {
 	}
 	return true
 }
-func equalsTable(t *testing.T, got schema2.Table, want schema2.Table) bool {
+func equalsTable(t *testing.T, got schema.Table, want schema.Table) bool {
 	t.Helper()
 
 	if got.Name() != want.Name() {
 		return false
 	}
-	if !slices.EqualFunc(got.Columns(), want.Columns(), func(got, want schema2.Column) bool {
+	if !slices.EqualFunc(got.Columns(), want.Columns(), func(got, want schema.Column) bool {
 		return equalsColumn(t, got, want)
 	}) {
 		return false
@@ -185,15 +244,16 @@ func equalsTable(t *testing.T, got schema2.Table, want schema2.Table) bool {
 	return true
 }
 
-func equalsColumn(t *testing.T, got schema2.Column, want schema2.Column) bool {
+func equalsColumn(t *testing.T, got schema.Column, want schema.Column) bool {
 	t.Helper()
+
 	if got.Name() != want.Name() {
 		return false
 	}
 	if got.Type() != want.Type() {
 		return false
 	}
-	if want.GoType().AssignableTo(got.GoType()) {
+	if got.GoType() != want.GoType() {
 		return false
 	}
 	return true

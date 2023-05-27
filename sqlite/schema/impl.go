@@ -4,57 +4,58 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"reflect"
+
 	"github.com/Jumpaku/gotaface/dbsql"
 	"github.com/Jumpaku/gotaface/schema"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/exp/slices"
-	"reflect"
 )
 
 type Column struct {
-	name string
-	typ  string
+	NameVal string
+	TypeVal string
 }
 
-func (c *Column) Name() string {
-	return c.name
+func (c Column) Name() string {
+	return c.NameVal
 }
-func (c *Column) Type() string {
-	return c.typ
+func (c Column) Type() string {
+	return c.TypeVal
 }
-func (c *Column) GoType() reflect.Type {
+func (c Column) GoType() reflect.Type {
 	return reflect.TypeOf(nil)
 }
 
 type Table struct {
-	name    string
-	columns []schema.Column
-	pk      []int
+	NameVal       string
+	ColumnsVal    []schema.Column
+	PrimaryKeyVal []int
 }
 
-func (t *Table) Name() string {
-	return t.name
+func (t Table) Name() string {
+	return t.NameVal
 }
 
-func (t *Table) Columns() []schema.Column {
-	return t.columns
+func (t Table) Columns() []schema.Column {
+	return t.ColumnsVal
 }
 
-func (t *Table) PrimaryKey() []int {
-	return t.pk
+func (t Table) PrimaryKey() []int {
+	return t.PrimaryKeyVal
 }
 
 type Schema struct {
-	tables     []schema.Table
-	references [][]int
+	TablesVal     []schema.Table
+	ReferencesVal [][]int
 }
 
 func (s *Schema) Tables() []schema.Table {
-	return s.tables
+	return s.TablesVal
 }
 
 func (s *Schema) References() [][]int {
-	return s.references
+	return s.ReferencesVal
 }
 
 type fetcher struct {
@@ -77,8 +78,8 @@ func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
 	}
 
 	return &Schema{
-		tables:     tables,
-		references: references,
+		TablesVal:     tables,
+		ReferencesVal: references,
 	}, nil
 }
 
@@ -116,16 +117,16 @@ ORDER BY m.name, c.cid
 		row := dbsql.StructScanRowValue[tableColumnRow](scannedRow)
 
 		if len(tables) == 0 || tables[len(tables)-1].Name() != row.TableName {
-			tables = append(tables, &Table{name: row.TableName})
+			tables = append(tables, &Table{NameVal: row.TableName})
 		}
 
 		table := tables[len(tables)-1].(*Table)
-		table.columns = append(table.columns, &Column{
-			name: row.ColumnName,
-			typ:  row.ColumnType,
+		table.ColumnsVal = append(table.ColumnsVal, &Column{
+			NameVal: row.ColumnName,
+			TypeVal: row.ColumnType,
 		})
 		if row.PKNumber > 0 {
-			table.pk = append(table.pk, row.PKNumber-1)
+			table.PrimaryKeyVal = append(table.PrimaryKeyVal, row.PKNumber-1)
 		}
 	}
 
@@ -171,8 +172,17 @@ ORDER BY m.name, f."table"
 		references[tableIndex] = append(references[tableIndex], foreignIndex)
 	}
 
-	for _, rs := range references {
+	for i, rs := range references {
+		rsUniq := map[int]any{}
+		for _, v := range rs {
+			rsUniq[v] = nil
+		}
+		rs := []int{}
+		for v := range rsUniq {
+			rs = append(rs, v)
+		}
 		slices.Sort(rs)
+		references[i] = rs
 	}
 
 	return references, nil

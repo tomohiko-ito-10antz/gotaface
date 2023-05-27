@@ -7,3 +7,5 @@ require (
 	github.com/oklog/ulid/v2 v2.1.0
 	golang.org/x/exp v0.0.0-20230519143937-03e91628a987
 )
+
+require github.com/davecgh/go-spew v1.1.1 // indirect
