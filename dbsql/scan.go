@@ -27,9 +27,9 @@ type ScanRowValue map[string]any
 
 func StructScanRowValue[Struct any](scanRowValue ScanRowValue) Struct {
 	var s Struct
-	rv := reflect.ValueOf(s)
-	if rv.IsValid() || rv.Kind() != reflect.Struct {
-		panic("generic type must be struct")
+	rv := reflect.ValueOf(&s).Elem()
+	if rv.Kind() != reflect.Struct {
+		panic(fmt.Sprintf("generic type must be struct but %v", rv.Type()))
 	}
 	rt := rv.Type()
 	fieldNameMapper := map[string]string{}
@@ -49,15 +49,11 @@ func StructScanRowValue[Struct any](scanRowValue ScanRowValue) Struct {
 			continue
 		}
 		rvField := rv.FieldByName(fieldName)
-		rvFieldValuePtr := reflect.New(rvField.Type())
 
-		if !columnValue.AssignTo(rvFieldValuePtr.Interface()) {
+		rvFieldPtr := rvField.Addr()
+		if !columnValue.AssignTo(rvFieldPtr.Interface()) {
 			continue
 		}
-		if !rvFieldValuePtr.Elem().Type().AssignableTo(rvField.Type()) {
-			continue
-		}
-		rvField.Set(rvFieldValuePtr.Elem())
 	}
 
 	return s
