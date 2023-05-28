@@ -1,0 +1,39 @@
+version: "3.5"
+
+services:
+  work:
+    # VSCode Dev Container
+    build:
+      context: "."
+      dockerfile: Dockerfile
+    working_dir: "/work/"
+    command: [ "sleep", "infinity" ]
+    volumes:
+      - "./:/work/:delegated"
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner:9010
+
+  work-remote:
+    # for GoLand with JetBrains Gateway
+    build:
+      context: "."
+      dockerfile: Dockerfile
+      target: work-remote
+    working_dir: "/work/"
+    command:
+      [
+        "/usr/sbin/sshd",
+        "-D",
+        "-e",
+        "-f",
+        "/etc/ssh/sshd_config_test_goland"
+      ]
+    volumes:
+      - "./:/work/:delegated"
+    ports:
+      - "127.0.0.1:2222:22"
+    #  - "8080:80"
+
+  spanner:
+    # to test implementation for spanner
+    image: gcr.io/cloud-spanner-emulator/emulator
