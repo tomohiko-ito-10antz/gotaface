@@ -1,8 +1,8 @@
 version: "3.5"
 
 services:
+  # for VSCode Dev Container
   work:
-    # VSCode Dev Container
     build:
       context: "."
       dockerfile: Dockerfile
@@ -13,8 +13,8 @@ services:
     environment:
       - SPANNER_EMULATOR_HOST=spanner:9010
 
+  # for GoLand with JetBrains Gateway
   work-remote:
-    # for GoLand with JetBrains Gateway
     build:
       context: "."
       dockerfile: Dockerfile
@@ -34,6 +34,16 @@ services:
       - "127.0.0.1:2222:22"
     #  - "8080:80"
 
+  # to test implementation for spanner
   spanner:
-    # to test implementation for spanner
     image: gcr.io/cloud-spanner-emulator/emulator
+  gcloud:
+    platform: linux/amd64
+    image: asia.gcr.io/google.com/cloudsdktool/google-cloud-cli
+    depends_on:
+      - spanner
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner:9010
+    volumes:
+      - ./:/work
+    working_dir: /work

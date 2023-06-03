@@ -7,7 +7,10 @@ CMD ["bash"]
 
 WORKDIR /work
 
-RUN apt update && apt install -y git curl jq make sqlite3 
+RUN apt update && apt install -y git curl jq make sqlite3 python
+
+# For Spanner
+RUN go install github.com/cloudspannerecosystem/spanner-cli@latest
 
 
 # Build and run:
@@ -37,7 +40,6 @@ RUN apt update && apt install -y \
   tzdata \
   make \
   && apt clean
-
 
 ## For goland-remote
 RUN ( \

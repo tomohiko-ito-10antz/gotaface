@@ -1,6 +1,6 @@
 {
   "name": "work",
-  "dockerComposeFile": "../docker-compose-work.yml",
+  "dockerComposeFile": "../docker-compose.yml",
   "service": "work",
   "workspaceFolder": "/work/",
   "customizations": {

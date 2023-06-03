@@ -2,13 +2,12 @@ package schema
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"reflect"
 
-	"github.com/Jumpaku/gotaface/dbsql"
+	"cloud.google.com/go/spanner"
 	"github.com/Jumpaku/gotaface/schema"
-	_ "github.com/mattn/go-sqlite3"
+	gotaface_spanner "github.com/Jumpaku/gotaface/spanner"
 	"golang.org/x/exp/slices"
 )
 
@@ -47,7 +46,8 @@ func (t Table) PrimaryKey() []int {
 
 type Schema struct {
 	TablesVal     []schema.Table
-	ReferencesVal [][]int
+	ParentTables  []*int
+	ForeignTables [][]int
 }
 
 func (s *Schema) Tables() []schema.Table {
@@ -55,135 +55,189 @@ func (s *Schema) Tables() []schema.Table {
 }
 
 func (s *Schema) References() [][]int {
-	return s.ReferencesVal
+	references := [][]int{}
+	for i, foreignTables := range s.ForeignTables {
+		references = append(references, foreignTables)
+		if s.ParentTables[i] != nil {
+			references[i] = append(references[i], *s.ParentTables[i])
+		}
+	}
+	return references
 }
 
 type fetcher struct {
-	db *sql.DB
+	queryer gotaface_spanner.Queryer
 }
 
-func NewFetcher(db *sql.DB) schema.Fetcher {
-	return &fetcher{db: db}
+func NewFetcher(queryer gotaface_spanner.Queryer) schema.Fetcher {
+	return &fetcher{queryer: queryer}
 }
 
 func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
 	tables, err := f.getTables(ctx)
 	if err != nil {
-		return nil, fmt.Errorf(`fail to list schema: %w`, err)
+		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
 	}
 
-	references, err := f.getReferences(ctx, tables)
+	parents, foreign, err := f.getReferences(ctx, tables)
 	if err != nil {
-		return nil, fmt.Errorf(`fail to list schema: %w`, err)
+		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
 	}
 
 	return &Schema{
 		TablesVal:     tables,
-		ReferencesVal: references,
+		ParentTables:  parents,
+		ForeignTables: foreign,
 	}, nil
 }
 
 func (f *fetcher) getTables(ctx context.Context) ([]schema.Table, error) {
 	type tableColumnRow struct {
-		TableName  string
-		ColumnName string
-		ColumnType string
-		PKNumber   int
+		TableName       string
+		Columns         []string
+		ColumnPositions []int64
+		ColumnTypes     []string
+		KeyColumns      []string
+		KeyPositions    []int64
 	}
 
-	rows, err := f.db.QueryContext(ctx, `
-SELECT
-    m.name AS TableName,
-    c.name AS ColumnName,
-    c.type AS ColumnType,
-    c.pk AS PKNumber
-FROM sqlite_master AS m
-JOIN pragma_table_info(m.name) AS c
-WHERE m.type = 'table'
-ORDER BY m.name, c.cid
-`)
+	rows := f.queryer.Query(ctx, spanner.Statement{SQL: `
+-- Fetches columns and primary keys
+WITH c AS (
+    SELECT
+        c.TABLE_NAME AS TableName, 
+        ARRAY_AGG(c.COLUMN_NAME) AS Columns, 
+        ARRAY_AGG(c.ORDINAL_POSITION) AS ColumnPositions, 
+        ARRAY_AGG(c.SPANNER_TYPE) AS ColumnTypes
+    FROM INFORMATION_SCHEMA.TABLES AS t
+        JOIN  INFORMATION_SCHEMA.COLUMNS AS c
+        ON t.TABLE_NAME = c.TABLE_NAME
+    WHERE c.TABLE_CATALOG = '' 
+        AND c.TABLE_SCHEMA = ''
+        AND t.TABLE_TYPE = 'BASE TABLE' 
+        AND c.IS_GENERATED = 'NEVER'
+    GROUP BY c.TABLE_NAME
+),
+p AS (
+    SELECT 
+        t.TABLE_NAME AS TableName,
+        ARRAY_AGG(k.COLUMN_NAME) AS KeyColumns,
+        ARRAY_AGG(k.ORDINAL_POSITION) AS KeyPositions
+    FROM 
+        INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS t 
+        JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS k 
+        ON t.CONSTRAINT_NAME = k.CONSTRAINT_NAME 
+    WHERE
+        t.CONSTRAINT_TYPE = 'PRIMARY KEY' 
+    GROUP BY t.TABLE_NAME
+)
+
+SELECT 
+    c.TableName,
+    c.Columns,
+    c.ColumnPositions,
+    c.ColumnTypes,
+    p.KeyColumns,
+    p.KeyPositions
+FROM c JOIN p ON c.TableName = p.TableName
+ORDER BY c.TableName;
+`})
+	scannedRows, err := gotaface_spanner.ScanRows[tableColumnRow](rows)
 	if err != nil {
 		return nil, fmt.Errorf(`fail to get tables and columns: %w`, err)
 	}
-	defer rows.Close()
 
 	tables := []schema.Table{}
-	scannedRows, err := dbsql.ScanRows(rows, dbsql.NewScanRowTypes[tableColumnRow]())
-	if err != nil {
-		return nil, fmt.Errorf(`fail to scan rows: %w`, err)
-	}
-
-	for _, scannedRow := range scannedRows {
-		row := dbsql.StructScanRowValue[tableColumnRow](scannedRow)
-
-		if len(tables) == 0 || tables[len(tables)-1].Name() != row.TableName {
-			tables = append(tables, &Table{NameVal: row.TableName})
+	for _, row := range scannedRows {
+		table := &Table{
+			NameVal:       row.TableName,
+			ColumnsVal:    make([]schema.Column, len(row.Columns)),
+			PrimaryKeyVal: make([]int, len(row.KeyColumns)),
+		}
+		columnPositions := map[string]int{}
+		for i, column := range row.Columns {
+			table.ColumnsVal[row.ColumnPositions[i]-1] = &Column{
+				NameVal: column,
+				TypeVal: row.ColumnTypes[i],
+			}
+			columnPositions[column] = int(row.ColumnPositions[i] - 1)
+		}
+		for i, key := range row.KeyColumns {
+			table.PrimaryKeyVal[row.KeyPositions[i]-1] = columnPositions[key]
 		}
 
-		table := tables[len(tables)-1].(*Table)
-		table.ColumnsVal = append(table.ColumnsVal, &Column{
-			NameVal: row.ColumnName,
-			TypeVal: row.ColumnType,
-		})
-		if row.PKNumber > 0 {
-			table.PrimaryKeyVal = append(table.PrimaryKeyVal, row.PKNumber-1)
-		}
+		tables = append(tables, table)
 	}
 
 	return tables, nil
 }
 
-func (f *fetcher) getReferences(ctx context.Context, tables []schema.Table) ([][]int, error) {
-	type foreignTableRow struct {
-		TableName        string
-		ForeignTableName string
+func (f *fetcher) getReferences(ctx context.Context, tables []schema.Table) ([]*int, [][]int, error) {
+	type referencedTableRow struct {
+		TableName         string
+		ParentTableName   *string
+		ForeignTableNames []string
 	}
+	rows := f.queryer.Query(ctx, spanner.Statement{SQL: `
+-- Fetches parent table and foreign tables
+WITH p AS (
+    SELECT
+        t.TABLE_NAME AS TableName, 
+        t.PARENT_TABLE_NAME AS ParentTableName
+    FROM INFORMATION_SCHEMA.TABLES AS t
+    WHERE t.TABLE_CATALOG = '' 
+        AND t.TABLE_SCHEMA = ''
+        AND t.TABLE_TYPE = 'BASE TABLE'
+),
+f AS (
+    SELECT 
+        t.TABLE_NAME AS TableName,
+        ARRAY_AGG(c.TABLE_NAME) AS ForeignTableNames
+    FROM 
+        INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS t
+        JOIN INFORMATION_SCHEMA.CONSTRAINT_TABLE_USAGE AS c
+        ON t.CONSTRAINT_NAME = c.CONSTRAINT_NAME
+    WHERE t.CONSTRAINT_TYPE = 'FOREIGN KEY'
+    GROUP BY TableName
+)
+SELECT 
+    p.TableName,
+    p.ParentTableName,
+    f.ForeignTableNames
+FROM p LEFT OUTER JOIN f ON p.TableName = f.TableName
+ORDER BY p.TableName;
+`})
 
-	rows, err := f.db.QueryContext(ctx, `
-SELECT
-    m.name AS TableName,
-    f."table" AS ForeignTableName
-FROM sqlite_master AS m
-JOIN pragma_foreign_key_list(m.name) AS f
-WHERE m.type = 'table'
-ORDER BY m.name, f."table"
-`)
+	scannedRows, err := gotaface_spanner.ScanRows[referencedTableRow](rows)
 	if err != nil {
-		return nil, fmt.Errorf(`fail to get foreign tables: %w`, err)
+		return nil, nil, fmt.Errorf(`fail to get foreign tables: %w`, err)
 	}
-	defer rows.Close()
 
-	references := [][]int{}
-	nameToIndex := map[string]int{}
+	tableIndex := map[string]int{}
 	for index, table := range tables {
-		references = append(references, []int{})
-		nameToIndex[table.Name()] = index
+		tableIndex[table.Name()] = index
 	}
 
-	scannedRows, err := dbsql.ScanRows(rows, dbsql.NewScanRowTypes[foreignTableRow]())
-	if err != nil {
-		return nil, fmt.Errorf(`fail to scan rows: %w`, err)
-	}
-
-	for _, scannedRow := range scannedRows {
-		row := dbsql.StructScanRowValue[foreignTableRow](scannedRow)
-		tableIndex := nameToIndex[row.TableName]
-		foreignIndex := nameToIndex[row.ForeignTableName]
-		references[tableIndex] = append(references[tableIndex], foreignIndex)
-	}
-
-	for i, rs := range references {
-		rsUniq := map[int]any{}
-		for _, v := range rs {
-			rsUniq[v] = nil
+	foreign := make([][]int, len(tables))
+	parent := make([]*int, len(tables))
+	for _, row := range scannedRows {
+		index := tableIndex[row.TableName]
+		// parent table
+		if row.ParentTableName != nil {
+			parentIndex := tableIndex[*row.ParentTableName]
+			parent[index] = &parentIndex
 		}
-		rs := []int{}
-		for v := range rsUniq {
-			rs = append(rs, v)
+
+		// foreign table
+		foreignIndices := map[string]int{}
+		for _, foreignTable := range row.ForeignTableNames {
+			foreignIndices[foreignTable] = tableIndex[foreignTable]
 		}
-		slices.Sort(rs)
-		references[i] = rs
+		for _, foreignIndex := range foreignIndices {
+			foreign[index] = append(foreign[index], foreignIndex)
+		}
+		slices.Sort(foreign[index])
 	}
 
-	return references, nil
+	return parent, foreign, nil
 }

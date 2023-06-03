@@ -63,7 +63,7 @@ func setup(t *testing.T) (*sql.DB, func()) {
 	return db, tearDown
 }
 
-func TestLister_List(t *testing.T) {
+func TestFetcher_Fetch(t *testing.T) {
 	db, tearDown := setup(t)
 	defer tearDown()
 
@@ -114,7 +114,7 @@ CREATE TABLE t6 (
 `)
 	if err != nil {
 		tearDown()
-		t.Fatal("fail to list tables: %w", err)
+		t.Fatal("fail to fetch tables: %w", err)
 	}
 
 	sut := schema_impl.NewFetcher(db)
@@ -122,7 +122,7 @@ CREATE TABLE t6 (
 	got, err := sut.Fetch(context.Background())
 	if err != nil {
 		tearDown()
-		t.Fatal("fail to list tables: %w", err)
+		t.Fatal("fail to fetch tables: %w", err)
 	}
 	wantTables := []schema.Table{
 		schema_impl.Table{
@@ -203,7 +203,7 @@ CREATE TABLE t6 (
 	gotReferences := got.References()
 	if !equalsReferences(t, gotReferences, wantReferences) {
 		tearDown()
-		t.Fatalf("Referencces not match\n  got = %#v\n  want = %#v", spew.Sdump(gotReferences), spew.Sdump(wantReferences))
+		t.Fatalf("References not match\n  got = %#v\n  want = %#v", spew.Sdump(gotReferences), spew.Sdump(wantReferences))
 	}
 }
 

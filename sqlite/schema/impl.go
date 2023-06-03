@@ -2,7 +2,6 @@ package schema
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"reflect"
 
@@ -59,22 +58,22 @@ func (s *Schema) References() [][]int {
 }
 
 type fetcher struct {
-	db *sql.DB
+	queryer dbsql.Queryer
 }
 
-func NewFetcher(db *sql.DB) schema.Fetcher {
-	return &fetcher{db: db}
+func NewFetcher(db dbsql.Queryer) schema.Fetcher {
+	return &fetcher{queryer: db}
 }
 
 func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
 	tables, err := f.getTables(ctx)
 	if err != nil {
-		return nil, fmt.Errorf(`fail to list schema: %w`, err)
+		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
 	}
 
 	references, err := f.getReferences(ctx, tables)
 	if err != nil {
-		return nil, fmt.Errorf(`fail to list schema: %w`, err)
+		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
 	}
 
 	return &Schema{
@@ -91,7 +90,7 @@ func (f *fetcher) getTables(ctx context.Context) ([]schema.Table, error) {
 		PKNumber   int
 	}
 
-	rows, err := f.db.QueryContext(ctx, `
+	rows, err := f.queryer.QueryContext(ctx, `
 SELECT
     m.name AS TableName,
     c.name AS ColumnName,
@@ -139,7 +138,7 @@ func (f *fetcher) getReferences(ctx context.Context, tables []schema.Table) ([][
 		ForeignTableName string
 	}
 
-	rows, err := f.db.QueryContext(ctx, `
+	rows, err := f.queryer.QueryContext(ctx, `
 SELECT
     m.name AS TableName,
     f."table" AS ForeignTableName
