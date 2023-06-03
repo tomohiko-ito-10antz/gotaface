@@ -1,0 +1,32 @@
+version: "3.5"
+
+services:
+  # to test implementation for spanner
+  test:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+      target: work-base
+    working_dir: /work
+    command: [ "go", "test", "./spanner/..." ]
+    volumes:
+      - ../:/work/
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner:9010
+    depends_on:
+      - gcloud
+      - spanner
+
+  # to test implementation for spanner
+  spanner:
+    image: gcr.io/cloud-spanner-emulator/emulator
+  gcloud:
+    platform: linux/amd64
+    image: asia.gcr.io/google.com/cloudsdktool/google-cloud-cli
+    depends_on:
+      - spanner
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner:9010
+    volumes:
+      - ./tools:/tools
+    command: ["sh", "tools/new-instance.sh"]

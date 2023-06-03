@@ -15,9 +15,13 @@ type Table interface {
 	Name() string
 	Columns() []Column
 	PrimaryKey() []int
-	References() []Table
 }
 
-type Lister interface {
-	List(ctx context.Context) []Table
+type Schema interface {
+	Tables() []Table
+	References() [][]int
+}
+
+type Fetcher interface {
+	Fetch(ctx context.Context) (Schema, error)
 }
