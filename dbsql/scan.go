@@ -51,8 +51,8 @@ func StructScanRowValue[Struct any](scanRowValue ScanRowValue) Struct {
 		rvField := rv.FieldByName(fieldName)
 
 		rvFieldPtr := rvField.Addr()
-		if !columnValue.AssignTo(rvFieldPtr.Interface()) {
-			continue
+		if err := columnValue.AssignTo(rvFieldPtr.Interface()); err != nil {
+			panic(fmt.Errorf("cannot assign to field value: %w", err))
 		}
 	}
 
@@ -92,4 +92,17 @@ func ScanRows(rows *sql.Rows, scanTypes ScanRowTypes) ([]ScanRowValue, error) {
 		rowValues = append(rowValues, rowValue)
 	}
 	return rowValues, nil
+}
+
+func ScanRowsStruct[Struct any](rows *sql.Rows) ([]*Struct, error) {
+	scanRowValues, err := ScanRows(rows, NewScanRowTypes[Struct]())
+	if err != nil {
+		return nil, fmt.Errorf("fail to scan row values: %w", err)
+	}
+	scanRowValueStructs := []*Struct{}
+	for _, scanRowValue := range scanRowValues {
+		scanRowValueStruct := StructScanRowValue[Struct](scanRowValue)
+		scanRowValueStructs = append(scanRowValueStructs, &scanRowValueStruct)
+	}
+	return scanRowValueStructs, nil
 }

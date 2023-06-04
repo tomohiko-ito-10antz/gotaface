@@ -22,16 +22,16 @@ func (dv *Value) Scan(src any) error {
 	return nil
 }
 
-func (dv *Value) AssignTo(dstPtr any) bool {
+func (dv *Value) AssignTo(dstPtr any) error {
 	rvDstPtr := reflect.ValueOf(dstPtr)
 	if !rvDstPtr.IsValid() {
-		return false
+		return fmt.Errorf(`invalid destination`)
 	}
 	if rvDstPtr.Kind() != reflect.Pointer {
-		return false
+		return fmt.Errorf(`destination must be pointer`)
 	}
 	if rvDstPtr.IsNil() {
-		return false
+		return fmt.Errorf(`destination pointer must be not nil`)
 	}
 
 	valAny := dv.Any
@@ -46,45 +46,57 @@ func (dv *Value) AssignTo(dstPtr any) bool {
 	switch dstPtr := dstPtr.(type) {
 	case *string, **string, *sql.NullString:
 		if errNullString != nil {
-			return false
+			return fmt.Errorf(`fail to convert source value to nullable string`)
 		}
-		err := assignToString(nullString, reflect.ValueOf(dstPtr))
-		return err == nil
+		if err := assignToString(nullString, reflect.ValueOf(dstPtr)); err != nil {
+			return fmt.Errorf(`fail to assign nullable string value: %w`, err)
+		}
+		return nil
 	case *bool, **bool, *sql.NullBool:
 		if errNullBool != nil {
-			return false
+			return fmt.Errorf(`fail to convert source value to nullable bool`)
 		}
-		err := assignToBool(nullBool, reflect.ValueOf(dstPtr))
-		return err == nil
+		if err := assignToBool(nullBool, reflect.ValueOf(dstPtr)); err != nil {
+			return fmt.Errorf(`fail to assign nullable bool value: %w`, err)
+		}
+		return nil
 	case *float32, **float32, *float64, **float64, *sql.NullFloat64:
 		if errNullFloat64 != nil {
-			return false
+			return fmt.Errorf(`fail to convert source value to nullable float64`)
 		}
-		err := assignToFloat(nullFloat64, reflect.ValueOf(dstPtr))
-		return err == nil
+		if err := assignToFloat(nullFloat64, reflect.ValueOf(dstPtr)); err != nil {
+			return fmt.Errorf(`fail to assign nullable float64 value: %w`, err)
+		}
+		return nil
 	case *int, **int, *int8, **int8, *int16, **int16, *int32, **int32, *int64, **int64,
 		*uint, **uint, *uint8, **uint8, *uint16, **uint16, *uint32, **uint32, *uint64, **uint64,
 		*sql.NullByte, *sql.NullInt16, *sql.NullInt32, *sql.NullInt64:
 		if errNullInt64 != nil {
-			return false
+			return fmt.Errorf(`fail to convert source value to nullable int64`)
 		}
-		err := assignToInt(nullInt64, reflect.ValueOf(dstPtr))
-		return err == nil
+		if err := assignToInt(nullInt64, reflect.ValueOf(dstPtr)); err != nil {
+			return fmt.Errorf(`fail to assign nullable int64 value: %w`, err)
+		}
+		return nil
 	case *time.Time, **time.Time, *sql.NullTime:
 		if errNullTime != nil {
-			return false
+			return fmt.Errorf(`fail to convert source value to nullable time.Time`)
 		}
-		err := assignToTime(nullTime, reflect.ValueOf(dstPtr))
-		return err == nil
+		if err := assignToTime(nullTime, reflect.ValueOf(dstPtr)); err != nil {
+			return fmt.Errorf(`fail to assign nullable time.Time value: %w`, err)
+		}
+		return nil
 	case *[]byte, **[]byte, *NullBytes:
 		if errNullBytes != nil {
-			return false
+			return fmt.Errorf(`fail to convert source value to nullable []byte`)
 		}
-		err := assignToBytes(nullBytes, reflect.ValueOf(dstPtr))
-		return err == nil
+		if err := assignToBytes(nullBytes, reflect.ValueOf(dstPtr)); err != nil {
+			return fmt.Errorf(`fail to assign nullable []byte value: %w`, err)
+		}
+		return nil
+	default:
+		return fmt.Errorf(`fail to assign`)
 	}
-
-	return false
 }
 
 func assignToString(src sql.NullString, rvDstPtr reflect.Value) error {

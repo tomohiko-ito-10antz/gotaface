@@ -569,21 +569,21 @@ func TestValue_AssignTo_String(t *testing.T) {
 	for i, testCase := range testCases {
 		{
 			var got string
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wantVal.value, testCase.wantVal.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantVal)
 			}
 		}
 		{
 			var got *string
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wantValPtr.value, testCase.wantValPtr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantValPtr)
 			}
 		}
 		{
 			var got sql.NullString
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wantNullVal.value, testCase.wantNullVal.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantNullVal)
 			}
@@ -668,21 +668,21 @@ func TestValue_AssignTo_Bool(t *testing.T) {
 	for i, testCase := range testCases {
 		{
 			var got bool
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wantVal.value, testCase.wantVal.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantVal)
 			}
 		}
 		{
 			var got *bool
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wantValPtr.value, testCase.wantValPtr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantValPtr)
 			}
 		}
 		{
 			var got sql.NullBool
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wantNullVal.value, testCase.wantNullVal.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantNullVal)
 			}
@@ -789,35 +789,35 @@ func TestValue_AssignTo_Float64(t *testing.T) {
 	for i, testCase := range testCases {
 		{
 			var got float32
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wantVal32.value, testCase.wantVal32.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantVal32)
 			}
 		}
 		{
 			var got float64
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wantVal64.value, testCase.wantVal64.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantVal64)
 			}
 		}
 		{
 			var got *float32
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wantVal32Ptr.value, testCase.wantVal32Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantVal32Ptr)
 			}
 		}
 		{
 			var got *float64
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wantVal64Ptr.value, testCase.wantVal64Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantVal64Ptr)
 			}
 		}
 		{
 			var got sql.NullFloat64
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wantNullVal.value, testCase.wantNullVal.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantNullVal)
 			}
@@ -1103,168 +1103,168 @@ func TestValue_AssignTo_Int64(t *testing.T) {
 	for i, testCase := range testCases {
 		{
 			var got int
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.val.value, testCase.wants.val.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.val)
 			}
 		}
 		{
 			var got int8
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.val8.value, testCase.wants.val8.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.val8)
 			}
 		}
 		{
 			var got int16
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.val16.value, testCase.wants.val16.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.val16)
 			}
 		}
 		{
 			var got int32
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.val32.value, testCase.wants.val32.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.val32)
 			}
 		}
 		{
 			var got int64
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.val64.value, testCase.wants.val64.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.val64)
 			}
 		}
 		{
 			var got uint
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.valU.value, testCase.wants.valU.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valU)
 			}
 		}
 		{
 			var got uint8
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.valU8.value, testCase.wants.valU8.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valU8)
 			}
 		}
 		{
 			var got uint16
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.valU16.value, testCase.wants.valU16.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valU16)
 			}
 		}
 		{
 			var got uint32
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.valU32.value, testCase.wants.valU32.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valU32)
 			}
 		}
 		{
 			var got uint64
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.valU64.value, testCase.wants.valU64.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valU64)
 			}
 		}
 		{
 			var got *int
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.valPtr.value, testCase.wants.valPtr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valPtr)
 			}
 		}
 		{
 			var got *int8
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.val8Ptr.value, testCase.wants.val8Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.val8Ptr)
 			}
 		}
 		{
 			var got *int16
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.val16Ptr.value, testCase.wants.val16Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.val16Ptr)
 			}
 		}
 		{
 			var got *int32
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.val32Ptr.value, testCase.wants.val32Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.val32Ptr)
 			}
 		}
 		{
 			var got *int64
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.val64Ptr.value, testCase.wants.val64Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.val64Ptr)
 			}
 		}
 		{
 			var got *uint
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.valUPtr.value, testCase.wants.valUPtr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valUPtr)
 			}
 		}
 		{
 			var got *uint8
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.valU8Ptr.value, testCase.wants.valU8Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valU8Ptr)
 			}
 		}
 		{
 			var got *uint16
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.valU16Ptr.value, testCase.wants.valU16Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valU16Ptr)
 			}
 		}
 		{
 			var got *uint32
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.valU32Ptr.value, testCase.wants.valU32Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valU32Ptr)
 			}
 		}
 		{
 			var got *uint64
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wants.valU64Ptr.value, testCase.wants.valU64Ptr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.valU64Ptr)
 			}
 		}
 		{
 			var got sql.NullByte
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.nullValByte.value, testCase.wants.nullValByte.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.nullValByte)
 			}
 		}
 		{
 			var got sql.NullInt16
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.nullVal16.value, testCase.wants.nullVal16.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.nullVal16)
 			}
 		}
 		{
 			var got sql.NullInt32
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.nullVal32.value, testCase.wants.nullVal32.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.nullVal32)
 			}
 		}
 		{
 			var got sql.NullInt64
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wants.nullVal64.value, testCase.wants.nullVal64.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wants.nullVal64)
 			}
@@ -1332,21 +1332,21 @@ func TestValue_AssignTo_Time(t *testing.T) {
 	for i, testCase := range testCases {
 		{
 			var got time.Time
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wantVal.value, testCase.wantVal.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantVal)
 			}
 		}
 		{
 			var got *time.Time
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsValPtr(got, ok, testCase.wantValPtr.value, testCase.wantValPtr.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantValPtr)
 			}
 		}
 		{
 			var got sql.NullTime
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if !equalsVal(got, ok, testCase.wantNullVal.value, testCase.wantNullVal.ok) {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantNullVal)
 			}
@@ -1420,7 +1420,7 @@ func TestValue_AssignTo_Bytes(t *testing.T) {
 	for i, testCase := range testCases {
 		{
 			var got []byte
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if ok != testCase.wantVal.ok {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantVal)
 			}
@@ -1436,7 +1436,7 @@ func TestValue_AssignTo_Bytes(t *testing.T) {
 		}
 		{
 			var got *[]byte
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if ok != testCase.wantVal.ok {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantValPtr)
 			}
@@ -1457,7 +1457,7 @@ func TestValue_AssignTo_Bytes(t *testing.T) {
 		}
 		{
 			var got dbsql.NullBytes
-			ok := testCase.sut.AssignTo(&got)
+			ok := testCase.sut.AssignTo(&got) == nil
 			if ok != testCase.wantNullVal.ok {
 				t.Errorf("sut[%d] = %#v\n  got %#v, ok %#v\n  want %#v", i, testCase.sut, got, ok, testCase.wantNullVal)
 			}
