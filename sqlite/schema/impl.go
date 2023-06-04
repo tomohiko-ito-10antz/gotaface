@@ -107,14 +107,12 @@ ORDER BY m.name, c.cid
 	defer rows.Close()
 
 	tables := []schema.Table{}
-	scannedRows, err := dbsql.ScanRows(rows, dbsql.NewScanRowTypes[tableColumnRow]())
+	scannedRows, err := dbsql.ScanRowsStruct[tableColumnRow](rows)
 	if err != nil {
 		return nil, fmt.Errorf(`fail to scan rows: %w`, err)
 	}
 
-	for _, scannedRow := range scannedRows {
-		row := dbsql.StructScanRowValue[tableColumnRow](scannedRow)
-
+	for _, row := range scannedRows {
 		if len(tables) == 0 || tables[len(tables)-1].Name() != row.TableName {
 			tables = append(tables, &Table{NameVal: row.TableName})
 		}
@@ -159,13 +157,12 @@ ORDER BY m.name, f."table"
 		nameToIndex[table.Name()] = index
 	}
 
-	scannedRows, err := dbsql.ScanRows(rows, dbsql.NewScanRowTypes[foreignTableRow]())
+	scannedRows, err := dbsql.ScanRowsStruct[foreignTableRow](rows)
 	if err != nil {
 		return nil, fmt.Errorf(`fail to scan rows: %w`, err)
 	}
 
-	for _, scannedRow := range scannedRows {
-		row := dbsql.StructScanRowValue[foreignTableRow](scannedRow)
+	for _, row := range scannedRows {
 		tableIndex := nameToIndex[row.TableName]
 		foreignIndex := nameToIndex[row.ForeignTableName]
 		references[tableIndex] = append(references[tableIndex], foreignIndex)

@@ -275,14 +275,14 @@ CREATE TABLE t9 (
 	if len(gotTables) != len(wantTables) {
 		tx.Close()
 		tearDown()
-		t.Fatalf("table count not match\n  len(gotTables) = %v\n  len(wantTables) = %v", len(gotTables), len(wantTables))
+		t.Errorf("table count not match\n  len(gotTables) = %v\n  len(wantTables) = %v", len(gotTables), len(wantTables))
 	}
 
 	for i, want := range wantTables {
 		if !equalsTable(t, gotTables[i], want) {
 			tx.Close()
 			tearDown()
-			t.Fatalf("Table[%d] = %s not match\n  got = %v\n  want = %v", i, want.Name(), spew.Sdump(gotTables[i]), spew.Sdump(want))
+			t.Errorf("Table[%d] = %s not match\n  got = %v\n  want = %v", i, want.Name(), spew.Sdump(gotTables[i]), spew.Sdump(want))
 		}
 	}
 
@@ -290,7 +290,7 @@ CREATE TABLE t9 (
 	if !equalsReferences(t, gotReferences, wantReferences) {
 		tx.Close()
 		tearDown()
-		t.Fatalf("References not match\n  got = %#v\n  want = %#v", spew.Sdump(gotReferences), spew.Sdump(wantReferences))
+		t.Errorf("References not match\n  got = %#v\n  want = %#v", spew.Sdump(gotReferences), spew.Sdump(wantReferences))
 	}
 }
 

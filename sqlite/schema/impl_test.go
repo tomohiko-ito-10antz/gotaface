@@ -3,9 +3,7 @@ package schema_test
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/davecgh/go-spew/spew"
@@ -14,15 +12,11 @@ import (
 	schema_impl "github.com/Jumpaku/gotaface/sqlite/schema"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/oklog/ulid/v2"
 	"golang.org/x/exp/slices"
 )
 
-const envTestSQLiteSchemaDBDir = "GOTAFACE_TEST_SQLITE_SCHEMA_DB_DIR"
-
 var (
-	skipTest  bool
-	testDBDir string
+	skipTest bool
 )
 
 func TestMain(m *testing.M) {
@@ -31,16 +25,6 @@ func TestMain(m *testing.M) {
 }
 
 func initialize() {
-	if os.Getenv(envTestSQLiteSchemaDBDir) == "" {
-		skipTest = true
-		return
-	}
-
-	testDBDir = os.Getenv(envTestSQLiteSchemaDBDir)
-}
-
-func newDatabaseName() string {
-	return fmt.Sprintf(`gotaface_test_sqlite_schema_%s.db`, ulid.Make().String())
 }
 
 func setup(t *testing.T) (*sql.DB, func()) {
@@ -48,16 +32,13 @@ func setup(t *testing.T) (*sql.DB, func()) {
 	if skipTest {
 		t.Skip("skip test")
 	}
-	dataSource := filepath.Join(testDBDir, newDatabaseName())
-	os.Remove(dataSource)
-	db, err := sql.Open("sqlite3", dataSource)
+	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	tearDown := func() {
 		db.Close()
-		os.Remove(dataSource)
 	}
 
 	return db, tearDown
@@ -114,7 +95,7 @@ CREATE TABLE t6 (
 `)
 	if err != nil {
 		tearDown()
-		t.Fatal("fail to fetch tables: %w", err)
+		t.Fatalf("fail to fetch tables: %v", err)
 	}
 
 	sut := schema_impl.NewFetcher(db)
@@ -190,20 +171,20 @@ CREATE TABLE t6 (
 	gotTables := got.Tables()
 	if len(gotTables) != len(wantTables) {
 		tearDown()
-		t.Fatalf("table count not match\n  len(gotTables) = %v\n  len(wantTables) = %v", len(gotTables), len(wantTables))
+		t.Errorf("table count not match\n  len(gotTables) = %v\n  len(wantTables) = %v", len(gotTables), len(wantTables))
 	}
 
 	for i, want := range wantTables {
 		if !equalsTable(t, gotTables[i], want) {
 			tearDown()
-			t.Fatalf("Table[%d] = %s not match\n  got = %v\n  want = %v", i, want.Name(), spew.Sdump(gotTables[i]), spew.Sdump(want))
+			t.Errorf("Table[%d] = %s not match\n  got = %v\n  want = %v", i, want.Name(), spew.Sdump(gotTables[i]), spew.Sdump(want))
 		}
 	}
 
 	gotReferences := got.References()
 	if !equalsReferences(t, gotReferences, wantReferences) {
 		tearDown()
-		t.Fatalf("References not match\n  got = %#v\n  want = %#v", spew.Sdump(gotReferences), spew.Sdump(wantReferences))
+		t.Errorf("References not match\n  got = %#v\n  want = %#v", spew.Sdump(gotReferences), spew.Sdump(wantReferences))
 	}
 }
 
