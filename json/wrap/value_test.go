@@ -70,7 +70,7 @@ func TestType(t *testing.T) {
 	for i, testCase := range testCases {
 		got := testCase.sut.Type()
 		if got != testCase.want {
-			t.Fatalf("case=%d: got != want\n  got  = %v\n  want = %v", i, got, testCase.want)
+			t.Errorf("case=%d: got != want\n  got  = %v\n  want = %v", i, got, testCase.want)
 		}
 	}
 }
@@ -144,18 +144,18 @@ func TestNumberGet(t *testing.T) {
 		case float64:
 			got, err := got.Float64()
 			if err != nil {
-				t.Fatalf("case=%d: err = %#v", i, err)
+				t.Errorf("case=%d: err = %#v", i, err)
 			}
 			if !closeTo(t, got, want, 1e-10) {
-				t.Fatalf("case=%d: got is not close to want\n  got  = %#v\n  want = %#v", i, got, want)
+				t.Errorf("case=%d: got is not close to want\n  got  = %#v\n  want = %#v", i, got, want)
 			}
 		case int64:
 			got, err := got.Int64()
 			if err != nil {
-				t.Fatalf("case=%d: err = %#v", i, err)
+				t.Errorf("case=%d: err = %#v", i, err)
 			}
 			if got != want {
-				t.Fatalf("case=%d: got != want\n  got  = %#v\n  want = %#v", i, got, want)
+				t.Errorf("case=%d: got != want\n  got  = %#v\n  want = %#v", i, got, want)
 			}
 		default:
 			t.Fatal()
