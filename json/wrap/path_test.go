@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Jumpaku/gotaface/json/wrap"
-	"github.com/Jumpaku/gotaface/json/wrap/test/assert"
+	"github.com/Jumpaku/gotaface/test/assert"
 )
 
 func TestKey_String(t *testing.T) {
