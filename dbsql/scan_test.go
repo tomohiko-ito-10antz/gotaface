@@ -115,15 +115,15 @@ func TestNewScanRowType(t *testing.T) {
 	got := dbsql.NewScanRowTypes[S]()
 
 	if len(got) != len(want) {
-		t.Fatalf(`len(got) = %d, len(want) = %d`, len(got), len(want))
+		t.Errorf(`len(got) = %d, len(want) = %d`, len(got), len(want))
 	}
 	for wantCol, wantTyp := range want {
 		gotTyp, ok := got[wantCol]
 		if !ok {
-			t.Fatalf(`got does not have key %v`, wantCol)
+			t.Errorf(`got does not have key %v`, wantCol)
 		}
 		if gotTyp != wantTyp {
-			t.Fatalf(`got type for %v = %v, want type = %v`, wantCol, gotTyp, wantTyp)
+			t.Errorf(`got type for %v = %v, want type = %v`, wantCol, gotTyp, wantTyp)
 		}
 	}
 }
@@ -183,7 +183,7 @@ func TestStructScanRowValue(t *testing.T) {
 		want  S
 	}
 	testCases := []testCase{
-		testCase{
+		{
 			input: map[string]any{
 				"ColString":     "",
 				"ColStringPtr":  (*string)(nil),
@@ -339,18 +339,18 @@ func TestStructScanRowValue(t *testing.T) {
 func checkValue[T comparable](t *testing.T, i int, got T, want T) {
 	t.Helper()
 	if got != want {
-		t.Fatalf("case %v:\n  got = %v\n  want = %v", i, got, want)
+		t.Errorf("case %v:\n  got = %v\n  want = %v", i, got, want)
 	}
 }
 
 func checkValuePtr[T comparable](t *testing.T, i int, got *T, want *T) {
 	t.Helper()
 	if (got == nil) != (want == nil) {
-		t.Fatalf("case %v:\n  got = %v\n  want = %v", i, got, want)
+		t.Errorf("case %v:\n  got = %v\n  want = %v", i, got, want)
 	}
 	if got != nil {
 		if *got != *want {
-			t.Fatalf("case %v:\n  *got = %v\n  *want = %v", i, *got, *want)
+			t.Errorf("case %v:\n  *got = %v\n  *want = %v", i, *got, *want)
 		}
 
 	}
@@ -359,18 +359,18 @@ func checkValuePtr[T comparable](t *testing.T, i int, got *T, want *T) {
 func checkBytes(t *testing.T, i int, got []byte, want []byte) {
 	t.Helper()
 	if string(got) != string(want) {
-		t.Fatalf("case %v:\n  got = %v\n  want = %v", i, got, want)
+		t.Errorf("case %v:\n  got = %v\n  want = %v", i, got, want)
 	}
 }
 
 func checkNullBytes(t *testing.T, i int, got dbsql.NullBytes, want dbsql.NullBytes) {
 	t.Helper()
 	if got.Valid != want.Valid {
-		t.Fatalf("case %v:\n  got = %v\n  want = %v", i, got, want)
+		t.Errorf("case %v:\n  got = %v\n  want = %v", i, got, want)
 	}
 	if got.Valid {
 		if string(got.Bytes) != string(want.Bytes) {
-			t.Fatalf("case %v:\n  *got = %v\n  *want = %v", i, got, want)
+			t.Errorf("case %v:\n  *got = %v\n  *want = %v", i, got, want)
 		}
 
 	}
@@ -379,11 +379,11 @@ func checkNullBytes(t *testing.T, i int, got dbsql.NullBytes, want dbsql.NullByt
 func checkBytesPtr(t *testing.T, i int, got *[]byte, want *[]byte) {
 	t.Helper()
 	if (got == nil) != (want == nil) {
-		t.Fatalf("case %v:\n  got = %v\n  want = %v", i, got, want)
+		t.Errorf("case %v:\n  got = %v\n  want = %v", i, got, want)
 	}
 	if got != nil {
 		if string(*got) != string(*want) {
-			t.Fatalf("case %v:\n  *got = %v\n  *want = %v", i, *got, *want)
+			t.Errorf("case %v:\n  *got = %v\n  *want = %v", i, *got, *want)
 		}
 	}
 }

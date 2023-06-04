@@ -22,10 +22,6 @@ func (dv *Value) Scan(src any) error {
 	return nil
 }
 
-func canConvert[T any](val any) bool {
-	var target T
-	return reflect.ValueOf(val).CanConvert(reflect.TypeOf(target))
-}
 func (dv *Value) AssignTo(dstPtr any) bool {
 	rvDstPtr := reflect.ValueOf(dstPtr)
 	if !rvDstPtr.IsValid() {
