@@ -2,8 +2,10 @@ package schema
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/Jumpaku/gotaface/dbsql"
 	"github.com/Jumpaku/gotaface/schema"
@@ -22,8 +24,25 @@ func (c Column) Name() string {
 func (c Column) Type() string {
 	return c.TypeVal
 }
+
+func refType[T any]() reflect.Type {
+	var t T
+	return reflect.TypeOf(t)
+}
 func (c Column) GoType() reflect.Type {
-	return reflect.TypeOf(nil)
+	lower := strings.ToLower(c.Type())
+	switch {
+	case strings.Contains(lower, "int"):
+		return refType[sql.NullInt64]()
+	case strings.Contains(lower, "char"), strings.Contains(lower, "clob"), strings.Contains(lower, "text"):
+		return refType[sql.NullString]()
+	case strings.Contains(lower, "blob"), lower == "":
+		return refType[[]byte]()
+	case strings.Contains(lower, "real"), strings.Contains(lower, "floa"), strings.Contains(lower, "doub"):
+		return refType[sql.NullFloat64]()
+	default:
+		return refType[sql.NullString]()
+	}
 }
 
 type Table struct {

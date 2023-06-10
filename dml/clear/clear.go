@@ -1,5 +1,7 @@
-package truncate
+package clear
+
+import "context"
 
 type Clearer interface {
-	Clear(table string) error
+	Clear(ctx context.Context, table string) error
 }

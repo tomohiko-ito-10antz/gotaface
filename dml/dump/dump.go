@@ -1,7 +1,11 @@
 package dump
 
-import "github.com/Jumpaku/gotaface/dml"
+import (
+	"context"
+
+	"github.com/Jumpaku/gotaface/dml"
+)
 
 type Dumper interface {
-	Dump(table string) (dml.Rows, error)
+	Dump(ctx context.Context, table string) (dml.Rows, error)
 }

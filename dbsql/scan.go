@@ -66,7 +66,7 @@ func ScanRows(rows *sql.Rows, scanTypes ScanRowTypes) ([]ScanRowValue, error) {
 	}
 	rowValues := []ScanRowValue{}
 	for rows.Next() {
-		values := make([]any, len(columns))
+		//values := make([]any, len(columns))
 		pointers := make([]any, len(columns))
 		for i, column := range columns {
 			scanType, ok := scanTypes[column.Name()]
@@ -74,9 +74,10 @@ func ScanRows(rows *sql.Rows, scanTypes ScanRowTypes) ([]ScanRowValue, error) {
 				return nil, fmt.Errorf("fail to scan row Any %s", column.Name())
 			}
 
-			rv := reflect.New(scanType)
-			values[i] = rv.Elem().Interface()
-			pointers[i] = &values[i]
+			//rv := reflect.New(scanType)
+			//values[i] = rv.Elem().Interface()
+			//pointers[i] = &values[i]
+			pointers[i] = reflect.New(scanType).Interface()
 		}
 
 		err := rows.Scan(pointers...)
@@ -86,7 +87,7 @@ func ScanRows(rows *sql.Rows, scanTypes ScanRowTypes) ([]ScanRowValue, error) {
 
 		rowValue := map[string]any{}
 		for i, column := range columns {
-			rowValue[column.Name()] = values[i]
+			rowValue[column.Name()] = reflect.ValueOf(pointers[i]).Elem().Interface() // values[i]
 		}
 
 		rowValues = append(rowValues, rowValue)
