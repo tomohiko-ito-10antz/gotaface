@@ -10,7 +10,6 @@ import (
 	"github.com/Jumpaku/gotaface/sqlite/dml/dump"
 	schema_impl "github.com/Jumpaku/gotaface/sqlite/schema"
 	"github.com/Jumpaku/gotaface/sqlite/test"
-	"github.com/davecgh/go-spew/spew"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -53,16 +52,15 @@ VALUES
 	schema, err := schema_impl.NewFetcher(db).Fetch(ctx)
 	if err != nil {
 		tearDown()
-		t.Fatal("fail to fetch tables: %w", err)
+		t.Fatal("fail to fetch schema: %w", err)
 	}
-	t.Logf(spew.Sdump(schema))
 
 	sut := dump.NewDumper(db, schema)
 
 	got, err := sut.Dump(context.Background(), `t`)
 	if err != nil {
 		tearDown()
-		t.Fatalf("fail to fetch tables: %v", err)
+		t.Errorf("fail to dump table: %v", err)
 	}
 	want := dml.Rows{
 		{

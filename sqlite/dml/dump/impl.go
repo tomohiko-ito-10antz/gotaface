@@ -60,6 +60,7 @@ func (dumper dumper) getTableInfo(tableName string) (schema.Table, []string, dbs
 		return nil, nil, nil, fmt.Errorf(`table %s not found`, tableName)
 	}
 	table := tables[index]
+
 	orderBy := []string{}
 	for _, keyIndex := range table.PrimaryKey() {
 		orderBy = append(orderBy, table.Columns()[keyIndex].Name())
