@@ -80,8 +80,12 @@ func setup(t *testing.T) (*spanner_admin.DatabaseAdminClient, *spanner.Client, f
 
 	tearDown := func() {
 		client.Close()
+		err := adminClient.DropDatabase(ctx, &spanner_adminpb.DropDatabaseRequest{Database: dataSource})
+		if err != nil {
+			adminClient.Close()
+			t.Fatalf(`fail to drop spanner database in %s: %v`, parent, err)
+		}
 		adminClient.Close()
-		os.Remove(dataSource)
 	}
 
 	return adminClient, client, tearDown

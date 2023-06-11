@@ -22,7 +22,8 @@ func TestFetcher_Fetch(t *testing.T) {
 	}
 	defer tearDown()
 
-	_, err = db.Exec(`
+	ctx := context.Background()
+	_, err = db.ExecContext(ctx, `
 CREATE TABLE t0 (
   id1 INT,
   id2 INT,
@@ -74,7 +75,7 @@ CREATE TABLE t6 (
 
 	sut := schema_impl.NewFetcher(db)
 
-	got, err := sut.Fetch(context.Background())
+	got, err := sut.Fetch(ctx)
 	if err != nil {
 		tearDown()
 		t.Fatal("fail to fetch tables: %w", err)

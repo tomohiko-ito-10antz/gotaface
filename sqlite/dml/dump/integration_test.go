@@ -26,7 +26,8 @@ func TestDumper_Dump(t *testing.T) {
 	}
 	defer tearDown()
 
-	_, err = db.Exec(`
+	ctx := context.Background()
+	_, err = db.ExecContext(ctx, `
 CREATE TABLE t (
 	id2 INT,
 	id1 INT,
@@ -48,7 +49,6 @@ VALUES
 		t.Fatalf("fail to fetch tables: %v", err)
 	}
 
-	ctx := context.Background()
 	schema, err := schema_impl.NewFetcher(db).Fetch(ctx)
 	if err != nil {
 		tearDown()

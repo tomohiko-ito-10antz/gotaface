@@ -23,7 +23,8 @@ func TestClearer_Clear(t *testing.T) {
 	}
 	defer tearDown()
 
-	_, err = db.Exec(`
+	ctx := context.Background()
+	_, err = db.ExecContext(ctx, `
 CREATE TABLE t (
 	id2 INT,
 	id1 INT,
@@ -44,7 +45,6 @@ VALUES
 		tearDown()
 		t.Fatalf("fail to fetch tables: %v", err)
 	}
-	ctx := context.Background()
 
 	sut := clear.NewClearer(db)
 	err = sut.Clear(ctx, `t`)
