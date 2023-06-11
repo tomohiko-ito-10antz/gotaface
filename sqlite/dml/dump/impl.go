@@ -9,6 +9,7 @@ import (
 	"github.com/Jumpaku/gotaface/dml"
 	"github.com/Jumpaku/gotaface/dml/dump"
 	"github.com/Jumpaku/gotaface/schema"
+	schema_impl "github.com/Jumpaku/gotaface/sqlite/schema"
 	"golang.org/x/exp/slices"
 )
 
@@ -68,7 +69,7 @@ func (dumper dumper) getTableInfo(tableName string) (schema.Table, []string, dbs
 
 	scanTypes := dbsql.ScanRowTypes{}
 	for _, column := range table.Columns() {
-		scanTypes[column.Name()] = column.GoType()
+		scanTypes[column.Name()] = schema_impl.GoType(column)
 	}
 
 	return table, orderBy, scanTypes, nil

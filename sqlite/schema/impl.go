@@ -29,7 +29,7 @@ func refType[T any]() reflect.Type {
 	var t T
 	return reflect.TypeOf(t)
 }
-func (c Column) GoType() reflect.Type {
+func GoType(c schema.Column) reflect.Type {
 	lower := strings.ToLower(c.Type())
 	switch {
 	case strings.Contains(lower, "int"):

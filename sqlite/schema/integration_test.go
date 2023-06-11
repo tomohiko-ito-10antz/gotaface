@@ -209,8 +209,5 @@ func equalsColumn(t *testing.T, got schema.Column, want schema.Column) bool {
 	if got.Type() != want.Type() {
 		return false
 	}
-	if got.GoType() != want.GoType() {
-		return false
-	}
 	return true
 }
