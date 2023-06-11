@@ -7,8 +7,8 @@ import (
 	"testing"
 
 	"github.com/Jumpaku/gotaface/dml"
+	schema_impl "github.com/Jumpaku/gotaface/sqlite/ddl/schema"
 	"github.com/Jumpaku/gotaface/sqlite/dml/dump"
-	schema_impl "github.com/Jumpaku/gotaface/sqlite/schema"
 	"github.com/Jumpaku/gotaface/sqlite/test"
 
 	_ "github.com/mattn/go-sqlite3"

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Jumpaku/gotaface/sqlite/schema"
+	"github.com/Jumpaku/gotaface/sqlite/ddl/schema"
 )
 
 func refType[T any]() reflect.Type {

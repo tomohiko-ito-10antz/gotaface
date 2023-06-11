@@ -60,15 +60,8 @@ CREATE TABLE t (
 	col_float FLOAT64,
 	col_bytes BYTES(16),
 	col_bool BOOL,
-	col_date DATE,
 	col_timestamp TIMESTAMP
-) PRIMARY KEY (id1, id2);
-INSERT INTO t (id1, id2, col_integer, col_string, col_float, col_bytes, col_bool, col_date, col_timestamp)
-VALUES
-	(1, 2, 4, 'abc', 1.25, b'124abc', TRUE,  '2023-06-11T01:23:45Z', '2023-06-11T01:23:45Z'),
-	(2, 2, 3, 'def', 1.50, b'223def', FALSE, '2023-06-11T01:23:45Z', '2023-06-11T01:23:45Z'),
-	(1, 1, 2, 'ghi', 1.75, b'112ghi', TRUE,  '2023-06-11T01:23:45Z', '2023-06-11T01:23:45Z'),
-	(2, 1, 1, 'jkl', 2.00, b'211jkl', FALSE, '2023-06-11T01:23:45Z', '2023-06-11T01:23:45Z');
+) PRIMARY KEY (id1, id2)
 `,
 		},
 	}
@@ -78,6 +71,24 @@ VALUES
 		t.Fatalf(`fail to wait create tables: %v`, err)
 	}
 	if err := op.Wait(ctx); err != nil {
+		tearDown()
+		t.Fatalf(`fail to wait create tables: %v`, err)
+	}
+	_, err = spannerClient.ReadWriteTransaction(ctx, func(ctx context.Context, tx *spanner.ReadWriteTransaction) error {
+		_, err := tx.Update(ctx, spanner.NewStatement(`
+INSERT INTO t (id1, id2, col_integer, col_string, col_float, col_bytes, col_bool, col_timestamp)
+VALUES
+	(1, 2, 4, 'abc', 1.25, b'124abc', TRUE,  '2023-06-11T01:23:45Z'),
+	(2, 2, 3, 'def', 1.50, b'223def', FALSE, '2023-06-11T01:23:45Z'),
+	(1, 1, 2, 'ghi', 1.75, b'112ghi', TRUE,  '2023-06-11T01:23:45Z'),
+	(2, 1, 1, 'jkl', 2.00, b'211jkl', FALSE, '2023-06-11T01:23:45Z')
+`))
+		if err != nil {
+			return fmt.Errorf(`fail to insert rows: %w`, err)
+		}
+		return nil
+	})
+	if err != nil {
 		tearDown()
 		t.Fatalf(`fail to wait create tables: %v`, err)
 	}

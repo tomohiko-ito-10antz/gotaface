@@ -2,7 +2,6 @@ package dump_test
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"os"
 	"testing"
@@ -11,9 +10,12 @@ import (
 	"github.com/Jumpaku/gotaface/dml"
 	schema_impl "github.com/Jumpaku/gotaface/spanner/ddl/schema"
 	"github.com/Jumpaku/gotaface/spanner/dml/dump"
+	"golang.org/x/exp/slices"
 
 	spanner_test "github.com/Jumpaku/gotaface/spanner/test"
 
+	"cloud.google.com/go/civil"
+	"cloud.google.com/go/spanner"
 	spanner_adminpb "cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -25,15 +27,18 @@ var (
 var skipTest bool
 
 func TestMain(m *testing.M) {
+	testSpannerProject = os.Getenv(spanner_test.EnvTestSpannerProject)
+	testSpannerInstance = os.Getenv(spanner_test.EnvTestSpannerInstance)
+	skipTest = testSpannerProject == "" || testSpannerInstance == ""
 	os.Exit(m.Run())
 }
 
-func TestDumper_Dump(t *testing.T) {
+func TestDumper_Dump_Order(t *testing.T) {
 	if skipTest {
 		t.Skipf(`environment variables %s and %s are required`, spanner_test.EnvTestSpannerProject, spanner_test.EnvTestSpannerInstance)
 	}
 
-	spannerAdminClient, spannerClient, tearDown, err := spanner_test.Setup(testSpannerProject, testSpannerInstance, fmt.Sprintf(`dml_insert_%d`, time.Now().Unix()))
+	adminClient, client, tearDown, err := spanner_test.Setup(testSpannerProject, testSpannerInstance, fmt.Sprintf(`dml_dump_%d`, time.Now().Unix()))
 	if err != nil {
 		t.Fatalf(`fail to set up spanner: %v`, err)
 	}
@@ -41,30 +46,17 @@ func TestDumper_Dump(t *testing.T) {
 
 	ctx := context.Background()
 	ddl := &spanner_adminpb.UpdateDatabaseDdlRequest{
-		Database: spannerClient.DatabaseName(),
+		Database: client.DatabaseName(),
 		Statements: []string{
 			`
 CREATE TABLE t (
 	id1 INT64,
 	id2 INT64,
-	col_integer INT64,
-	col_string STRING(MAX),
-	col_float FLOAT64,
-	col_bytes BYTES(16),
-	col_bool BOOL,
-	col_date DATE,
-	col_timestamp TIMESTAMP
-) PRIMARY KEY (id1, id2);
-INSERT INTO t (id1, id2, col_integer, col_string, col_float, col_bytes, col_bool, col_date, col_timestamp)
-VALUES
-	(1, 2, 4, 'abc', 1.25, b'124abc', TRUE,  '2023-06-11T01:23:45Z', '2023-06-11T01:23:45Z'),
-	(2, 2, 3, 'def', 1.50, b'223def', FALSE, '2023-06-11T01:23:45Z', '2023-06-11T01:23:45Z'),
-	(1, 1, 2, 'ghi', 1.75, b'112ghi', TRUE,  '2023-06-11T01:23:45Z', '2023-06-11T01:23:45Z'),
-	(2, 1, 1, 'jkl', 2.00, b'211jkl', FALSE, '2023-06-11T01:23:45Z', '2023-06-11T01:23:45Z');
+) PRIMARY KEY (id1, id2)
 `,
 		},
 	}
-	op, err := spannerAdminClient.UpdateDatabaseDdl(ctx, ddl)
+	op, err := adminClient.UpdateDatabaseDdl(ctx, ddl)
 	if err != nil {
 		tearDown()
 		t.Fatalf(`fail to wait create tables: %v`, err)
@@ -73,8 +65,26 @@ VALUES
 		tearDown()
 		t.Fatalf(`fail to wait create tables: %v`, err)
 	}
+	_, err = client.ReadWriteTransaction(ctx, func(ctx context.Context, tx *spanner.ReadWriteTransaction) error {
+		_, err := tx.Update(ctx, spanner.NewStatement(`
+INSERT INTO t (id1, id2)
+VALUES
+	(1, 2),
+	(2, 2),
+	(1, 1),
+	(2, 1)
+`))
+		if err != nil {
+			return fmt.Errorf(`fail to insert rows: %w`, err)
+		}
+		return nil
+	})
+	if err != nil {
+		tearDown()
+		t.Fatalf(`fail to wait create tables: %v`, err)
+	}
 
-	tx := spannerClient.ReadOnlyTransaction()
+	tx := client.ReadOnlyTransaction()
 	defer tx.Close()
 
 	schema, err := schema_impl.NewFetcher(tx).Fetch(ctx)
@@ -91,48 +101,19 @@ VALUES
 		tearDown()
 		t.Errorf("fail to dump table: %v", err)
 	}
-	wantTime := time.Date(2023, 6, 11, 1, 23, 45, 0, time.UTC)
 	want := dml.Rows{
 		{
-			`id1`:           sql.NullInt64{Valid: true, Int64: 1},
-			`id2`:           sql.NullInt64{Valid: true, Int64: 1},
-			`col_integer`:   sql.NullInt64{Valid: true, Int64: 2},
-			`col_string`:    sql.NullString{Valid: true, String: `ghi`},
-			`col_float`:     sql.NullFloat64{Valid: true, Float64: 1.75},
-			`col_bytes`:     []byte(`112ghi`),
-			`col_bool`:      sql.NullBool{Valid: true, Bool: true},
-			`col_date`:      sql.NullTime{Valid: true, Time: wantTime},
-			`col_timestamp`: sql.NullTime{Valid: true, Time: wantTime},
+			`id1`: spanner.NullInt64{Valid: true, Int64: 1},
+			`id2`: spanner.NullInt64{Valid: true, Int64: 1},
 		}, {
-			`id1`:           sql.NullInt64{Valid: true, Int64: 1},
-			`id2`:           sql.NullInt64{Valid: true, Int64: 2},
-			`col_integer`:   sql.NullInt64{Valid: true, Int64: 4},
-			`col_string`:    sql.NullString{Valid: true, String: `abc`},
-			`col_float`:     sql.NullFloat64{Valid: true, Float64: 1.25},
-			`col_bytes`:     []byte(`124abc`),
-			`col_bool`:      sql.NullBool{Valid: true, Bool: true},
-			`col_date`:      sql.NullTime{Valid: true, Time: wantTime},
-			`col_timestamp`: sql.NullTime{Valid: true, Time: wantTime},
+			`id1`: spanner.NullInt64{Valid: true, Int64: 1},
+			`id2`: spanner.NullInt64{Valid: true, Int64: 2},
 		}, {
-			`id1`:           sql.NullInt64{Valid: true, Int64: 2},
-			`id2`:           sql.NullInt64{Valid: true, Int64: 1},
-			`col_integer`:   sql.NullInt64{Valid: true, Int64: 1},
-			`col_string`:    sql.NullString{Valid: true, String: `jkl`},
-			`col_float`:     sql.NullFloat64{Valid: true, Float64: 2.00},
-			`col_bytes`:     []byte(`211jkl`),
-			`col_bool`:      sql.NullBool{Valid: true, Bool: false},
-			`col_date`:      sql.NullTime{Valid: true, Time: wantTime},
-			`col_timestamp`: sql.NullTime{Valid: true, Time: wantTime},
+			`id1`: spanner.NullInt64{Valid: true, Int64: 2},
+			`id2`: spanner.NullInt64{Valid: true, Int64: 1},
 		}, {
-			`id1`:           sql.NullInt64{Valid: true, Int64: 2},
-			`id2`:           sql.NullInt64{Valid: true, Int64: 2},
-			`col_integer`:   sql.NullInt64{Valid: true, Int64: 3},
-			`col_string`:    sql.NullString{Valid: true, String: `def`},
-			`col_float`:     sql.NullFloat64{Valid: true, Float64: 1.50},
-			`col_bytes`:     []byte(`223def`),
-			`col_bool`:      sql.NullBool{Valid: true, Bool: false},
-			`col_date`:      sql.NullTime{Valid: true, Time: wantTime},
-			`col_timestamp`: sql.NullTime{Valid: true, Time: wantTime},
+			`id1`: spanner.NullInt64{Valid: true, Int64: 2},
+			`id2`: spanner.NullInt64{Valid: true, Int64: 2},
 		},
 	}
 
@@ -143,103 +124,135 @@ VALUES
 	}
 
 	for i, want := range want {
-		{
-			key := "id1"
-			got := got[i]
-			gotVal, ok := got[key]
+		for key, want := range want {
+			got, ok := got[i][key]
 			if !ok {
 				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
 			}
-			if gotVal != want[key] {
+			if got != want {
 				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
 			}
 		}
-		{
-			key := "id2"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
+	}
+}
+
+func TestDumper_Dump_Types(t *testing.T) {
+	if skipTest {
+		t.Skipf(`environment variables %s and %s are required`, spanner_test.EnvTestSpannerProject, spanner_test.EnvTestSpannerInstance)
+	}
+
+	adminClient, client, tearDown, err := spanner_test.Setup(testSpannerProject, testSpannerInstance, fmt.Sprintf(`dml_insert_%d`, time.Now().Unix()))
+	if err != nil {
+		t.Fatalf(`fail to set up spanner: %v`, err)
+	}
+	defer tearDown()
+
+	ctx := context.Background()
+	ddl := &spanner_adminpb.UpdateDatabaseDdlRequest{
+		Database: client.DatabaseName(),
+		Statements: []string{
+			`
+CREATE TABLE u (
+	col_integer   INT64,
+	col_string    STRING(MAX),
+	col_float     FLOAT64,
+	col_bytes     BYTES(16),
+	col_bool      BOOL,
+	col_timestamp TIMESTAMP,
+	col_date      DATE,
+	col_json      JSON,
+	col_array    ARRAY<INT64>,
+) PRIMARY KEY (col_integer)
+`,
+		},
+	}
+	op, err := adminClient.UpdateDatabaseDdl(ctx, ddl)
+	if err != nil {
+		tearDown()
+		t.Fatalf(`fail to wait create tables: %v`, err)
+	}
+	if err := op.Wait(ctx); err != nil {
+		tearDown()
+		t.Fatalf(`fail to wait create tables: %v`, err)
+	}
+	_, err = client.ReadWriteTransaction(ctx, func(ctx context.Context, tx *spanner.ReadWriteTransaction) error {
+		_, err := tx.Update(ctx, spanner.NewStatement(`
+INSERT INTO u (col_integer, col_string, col_float, col_bytes, col_bool, col_timestamp, col_date, col_json, col_array)
+VALUES (1, 'abc', 1.25, b'1234abcd', TRUE,  '2023-06-11T01:23:45Z', '2023-06-11', JSON'{"a":1, "b":"x", "c":null, "d":[{}, []], "e":{"x":{}, "y":[]}}', [1, 2, 3])
+`))
+		if err != nil {
+			return fmt.Errorf(`fail to insert rows: %w`, err)
 		}
+		return nil
+	})
+	if err != nil {
+		tearDown()
+		t.Fatalf(`fail to wait create tables: %v`, err)
+	}
+
+	tx := client.ReadOnlyTransaction()
+	defer tx.Close()
+
+	schema, err := schema_impl.NewFetcher(tx).Fetch(ctx)
+	if err != nil {
+		tearDown()
+		t.Fatal("fail to fetch schema: %w", err)
+	}
+
+	sut := dump.NewDumper(tx, schema)
+
+	got, err := sut.Dump(context.Background(), `u`)
+	if err != nil {
+		tx.Close()
+		tearDown()
+		t.Errorf("fail to dump table: %v", err)
+	}
+	wantTime := time.Date(2023, 6, 11, 1, 23, 45, 0, time.UTC)
+	want := dml.Rows{
 		{
-			key := "col_integer"
-			got := got[i]
-			gotVal, ok := got[key]
+			`col_integer`:   spanner.NullInt64{Valid: true, Int64: 1},
+			`col_string`:    spanner.NullString{Valid: true, StringVal: `abc`},
+			`col_float`:     spanner.NullFloat64{Valid: true, Float64: 1.25},
+			`col_bytes`:     []byte(`1234abcd`),
+			`col_bool`:      spanner.NullBool{Valid: true, Bool: true},
+			`col_timestamp`: spanner.NullTime{Valid: true, Time: wantTime},
+			`col_date`:      spanner.NullDate{Valid: true, Date: civil.DateOf(wantTime)},
+			`col_json`:      spanner.NullJSON{Valid: true, Value: map[string]any{"a": 1, "b": "x", "c": nil, "d": []any{map[string]any{}, []any{}}, "e": map[string]any{"x": map[string]any{}, "y": []any{}}}},
+			`col_array`:     []spanner.NullInt64{{Valid: true, Int64: 1}, {Valid: true, Int64: 2}, {Valid: true, Int64: 3}},
+		},
+	}
+
+	if len(got) != len(want) {
+		tx.Close()
+		tearDown()
+		t.Errorf("table count not match\n  len(got) = %v\n  len(want) = %v", len(got), len(want))
+	}
+
+	for i, want := range want {
+		for key, want := range want {
+			got, ok := got[i][key]
 			if !ok {
 				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
 			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_string"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_float"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_bytes"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if string(gotVal.([]byte)) != string(want[key].([]byte)) {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_bool"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_date"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_timestamp"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
+			switch key {
+			default:
+				if got != want {
+					t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
+				}
+			case "col_bytes":
+				if string(got.([]byte)) != string(want.([]byte)) {
+					t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
+				}
+			case "col_json":
+				got, _ := got.(spanner.NullJSON).MarshalJSON()
+				want, _ := want.(spanner.NullJSON).MarshalJSON()
+				if string(got) != string(want) {
+					t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
+				}
+			case "col_array":
+				if !slices.Equal(got.([]spanner.NullInt64), want.([]spanner.NullInt64)) {
+					t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
+				}
 			}
 		}
 	}

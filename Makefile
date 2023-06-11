@@ -15,6 +15,6 @@ lint: ## lint
 .PHONY: test
 test: ## test
 	go clean -testcache
-	sh spanner/tools/test-schema.sh
-	sh sqlite/tools/test-schema.sh
+	sh spanner/tools/integration-test.sh
+	go clean -testcache
 	go test ./...

@@ -44,6 +44,9 @@ func newDatabaseName() string {
 }
 
 func TestFetcher_Fetch(t *testing.T) {
+	if skipTest {
+		t.Skip()
+	}
 	spannerAdminClient, spannerClient, tearDown, err := spanner_test.Setup(testSpannerProject, testSpannerInstance, newDatabaseName())
 	if err != nil {
 		t.Fatalf(`fail to set up spanner: %v`, err)

@@ -20,7 +20,7 @@ func NewClearer(updater gotaface_spanner.Updater) clearer {
 }
 
 func (clearer clearer) Clear(ctx context.Context, table string) error {
-	_, err := clearer.updater.Update(ctx, spanner.Statement{SQL: fmt.Sprintf(`DELETE FROM %s`, table)})
+	_, err := clearer.updater.Update(ctx, spanner.Statement{SQL: fmt.Sprintf(`DELETE FROM %s WHERE TRUE`, table)})
 	if err != nil {
 		return fmt.Errorf(`fail to clear table: %w`, err)
 	}

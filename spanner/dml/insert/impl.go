@@ -3,21 +3,23 @@ package insert
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
-	"github.com/Jumpaku/gotaface/dbsql"
+	"cloud.google.com/go/spanner"
 	"github.com/Jumpaku/gotaface/dml"
 	"github.com/Jumpaku/gotaface/dml/insert"
+	spanner_impl "github.com/Jumpaku/gotaface/spanner"
 )
 
 type inserter struct {
-	execer dbsql.Execer
+	updater spanner_impl.Updater
 }
 
 var _ insert.Inserter = inserter{}
 
-func NewInserter(execer dbsql.Execer) inserter {
-	return inserter{execer: execer}
+func NewInserter(updater spanner_impl.Updater) inserter {
+	return inserter{updater: updater}
 }
 
 func (inserter inserter) Insert(ctx context.Context, table string, rows dml.Rows) error {
@@ -31,7 +33,7 @@ func (inserter inserter) Insert(ctx context.Context, table string, rows dml.Rows
 	}
 
 	values := []byte{}
-	params := []any{}
+	params := map[string]any{}
 	for n, row := range rows {
 		if n > 0 {
 			values = append(values, ',')
@@ -41,14 +43,16 @@ func (inserter inserter) Insert(ctx context.Context, table string, rows dml.Rows
 			if i > 0 {
 				values = append(values, ',')
 			}
-			values = append(values, '?')
-			params = append(params, row[key])
+
+			paramName := key + strconv.FormatInt(int64(n), 10)
+			values = append(values, ("@" + paramName)...)
+			params[paramName] = row[key]
 		}
 		values = append(values, ')')
 	}
 
 	stmt := fmt.Sprintf(`INSERT INTO %s (%s) VALUES %s`, table, strings.Join(keys, ","), values)
-	_, err := inserter.execer.ExecContext(ctx, stmt, params...)
+	_, err := inserter.updater.Update(ctx, spanner.Statement{SQL: stmt, Params: params})
 	if err != nil {
 		return fmt.Errorf(`fail to insert rows by %#v [%#v]: %w`, stmt, params, err)
 	}
