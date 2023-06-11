@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/Jumpaku/gotaface/dml"
+	schema_impl "github.com/Jumpaku/gotaface/spanner/ddl/schema"
 	"github.com/Jumpaku/gotaface/spanner/dml/dump"
-	schema_impl "github.com/Jumpaku/gotaface/spanner/schema"
 
 	spanner_test "github.com/Jumpaku/gotaface/spanner/test"
 

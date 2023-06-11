@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"cloud.google.com/go/spanner"
+	"github.com/Jumpaku/gotaface/ddl/schema"
 	"github.com/Jumpaku/gotaface/dml"
 	"github.com/Jumpaku/gotaface/dml/dump"
-	"github.com/Jumpaku/gotaface/schema"
 	gotaface_spanner "github.com/Jumpaku/gotaface/spanner"
-	schema_impl "github.com/Jumpaku/gotaface/spanner/schema"
+	schema_impl "github.com/Jumpaku/gotaface/spanner/ddl/schema"
 	"golang.org/x/exp/slices"
 )
 

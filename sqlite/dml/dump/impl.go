@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/Jumpaku/gotaface/dbsql"
+	"github.com/Jumpaku/gotaface/ddl/schema"
 	"github.com/Jumpaku/gotaface/dml"
 	"github.com/Jumpaku/gotaface/dml/dump"
-	"github.com/Jumpaku/gotaface/schema"
 	schema_impl "github.com/Jumpaku/gotaface/sqlite/schema"
 	"golang.org/x/exp/slices"
 )

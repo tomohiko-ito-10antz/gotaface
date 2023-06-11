@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/Jumpaku/gotaface/dbsql"
-	"github.com/Jumpaku/gotaface/schema"
+	"github.com/Jumpaku/gotaface/ddl/schema"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/exp/slices"
 )

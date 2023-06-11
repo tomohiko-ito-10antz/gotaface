@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/spanner/schema"
+	"github.com/Jumpaku/gotaface/spanner/ddl/schema"
 )
 
 func refType[T any]() reflect.Type {

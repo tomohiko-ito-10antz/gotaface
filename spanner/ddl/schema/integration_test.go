@@ -9,8 +9,8 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	"github.com/Jumpaku/gotaface/schema"
-	schema_impl "github.com/Jumpaku/gotaface/spanner/schema"
+	"github.com/Jumpaku/gotaface/ddl/schema"
+	schema_impl "github.com/Jumpaku/gotaface/spanner/ddl/schema"
 	spanner_test "github.com/Jumpaku/gotaface/spanner/test"
 
 	spanner_adminpb "cloud.google.com/go/spanner/admin/database/apiv1/databasepb"

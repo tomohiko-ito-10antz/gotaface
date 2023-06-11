@@ -6,7 +6,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	"github.com/Jumpaku/gotaface/schema"
+	"github.com/Jumpaku/gotaface/ddl/schema"
 	schema_impl "github.com/Jumpaku/gotaface/sqlite/schema"
 	"github.com/Jumpaku/gotaface/sqlite/test"
 
