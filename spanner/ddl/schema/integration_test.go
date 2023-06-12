@@ -20,15 +20,11 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func newDatabaseName() string {
-	return fmt.Sprintf(`schema_%d`, time.Now().Unix())
-}
-
 func TestFetcher_Fetch(t *testing.T) {
-	spannerAdminClient, spannerClient, tearDown := spanner_test.Setup(t, newDatabaseName())
+	adminClient, client, tearDown := spanner_test.Setup(t, fmt.Sprintf(`ddl_schema_%d`, time.Now().UnixNano()))
 	defer tearDown()
 
-	spanner_test.InitDDL(t, spannerAdminClient, spannerClient.DatabaseName(), []string{`
+	spanner_test.InitDDL(t, adminClient, client.DatabaseName(), []string{`
 CREATE TABLE t0 (
 	id1 INT64,
 	id2 INT64,
@@ -93,7 +89,7 @@ CREATE TABLE t9 (
 ) PRIMARY KEY (id1, id2, id3),
 	INTERLEAVE IN PARENT t8`,
 	})
-	tx := spannerClient.ReadOnlyTransaction()
+	tx := client.ReadOnlyTransaction()
 	defer tx.Close()
 
 	sut := schema_impl.NewFetcher(tx)

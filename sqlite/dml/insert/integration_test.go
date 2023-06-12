@@ -97,12 +97,12 @@ CREATE TABLE t (
 		}
 
 		equals := true
-		equals = equals || found.Id1 != want.Id1
-		equals = equals || found.Id2 != want.Id2
-		equals = equals || found.Col_integer != want.Col_integer
-		equals = equals || found.Col_text != want.Col_text
-		equals = equals || found.Col_real != want.Col_real
-		equals = equals || !slices.Equal(found.Col_blob, want.Col_blob)
+		equals = equals && found.Id1 == want.Id1
+		equals = equals && found.Id2 == want.Id2
+		equals = equals && found.Col_integer == want.Col_integer
+		equals = equals && found.Col_text == want.Col_text
+		equals = equals && found.Col_real == want.Col_real
+		equals = equals && slices.Equal(found.Col_blob, want.Col_blob)
 		if !equals {
 			t.Errorf("i = %d, id1\n found = %#v\n   want = %#v", i, found, want)
 		}
