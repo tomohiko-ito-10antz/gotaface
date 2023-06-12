@@ -18,14 +18,11 @@ func TestMain(m *testing.M) {
 }
 
 func TestInserter_Insert(t *testing.T) {
-	db, tearDown, err := test.Setup()
-	if err != nil {
-		t.Fatalf(`fail to setup DB for test: %v`, err)
-	}
+	db, tearDown := test.Setup(t)
 	defer tearDown()
 
 	ctx := context.Background()
-	_, err = db.ExecContext(ctx, `
+	_, err := db.ExecContext(ctx, `
 CREATE TABLE t (
 	id2 INT,
 	id1 INT,

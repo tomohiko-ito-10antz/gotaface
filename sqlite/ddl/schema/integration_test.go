@@ -15,14 +15,11 @@ import (
 )
 
 func TestFetcher_Fetch(t *testing.T) {
-	db, tearDown, err := test.Setup()
-	if err != nil {
-		t.Fatalf(`fail to setup DB for test: %v`, err)
-	}
+	db, tearDown := test.Setup(t)
 	defer tearDown()
 
 	ctx := context.Background()
-	test.Init(ctx, db, []test.Statement{{SQL: `
+	test.Init(t, db, []test.Statement{{SQL: `
 CREATE TABLE t0 (
 	id1 INT,
 	id2 INT,
@@ -66,10 +63,7 @@ CREATE TABLE t6 (
 	id3 INT,
 	PRIMARY KEY (id1, id2, id3),
 	FOREIGN KEY (id1, id2) REFERENCES t5 (id1, id2));
-`}}, nil)
-	if err != nil {
-		t.Fatalf("fail to create tables: %v", err)
-	}
+`}})
 
 	sut := schema_impl.NewFetcher(db)
 
@@ -77,6 +71,7 @@ CREATE TABLE t6 (
 	if err != nil {
 		t.Errorf("fail to fetch tables: %v", err)
 	}
+
 	wantTables := []schema.Table{
 		schema_impl.Table{
 			NameVal: "t0",

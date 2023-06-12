@@ -17,14 +17,12 @@ func TestMain(m *testing.M) {
 
 func TestClearer_Clear(t *testing.T) {
 
-	db, tearDown, err := test.Setup()
-	if err != nil {
-		t.Fatalf(`fail to setup DB for test: %v`, err)
-	}
+	db, tearDown := test.Setup(t)
 	defer tearDown()
 
 	ctx := context.Background()
-	_, err = db.ExecContext(ctx, `
+	test.Init(t, db, []test.Statement{{
+		SQL: `
 CREATE TABLE t (
 	id2 INT,
 	id1 INT,
@@ -40,26 +38,17 @@ VALUES
 	(2, 2, 3, "def", 1.50, X'323233646566'),
 	(1, 1, 2, "ghi", 1.75, X'313132676869'),
 	(2, 1, 1, "jkl", 2.00, X'3231316a6b6c');
-`)
-	if err != nil {
-		tearDown()
-		t.Fatalf("fail to fetch tables: %v", err)
-	}
+`,
+	}})
 
 	sut := clear.NewClearer(db)
-	err = sut.Clear(ctx, `t`)
+	err := sut.Clear(ctx, `t`)
 	if err != nil {
-		tearDown()
 		t.Errorf("fail to clear table: %v", err)
 	}
 
-	rows, err := db.QueryContext(ctx, `SELECT * FROM t`)
-	if err != nil {
-		tearDown()
-		t.Fatalf("fail to select all: %v", err)
-	}
-	if rows.Next() {
-		tearDown()
-		t.Errorf("rows are remaining")
+	rows := test.ListRows[struct{}](t, db, `t`)
+	if len(rows) > 0 {
+		t.Errorf("rows are remaining: %v", err)
 	}
 }
