@@ -15,7 +15,6 @@ import (
 )
 
 func TestFetcher_Fetch(t *testing.T) {
-
 	db, tearDown, err := test.Setup()
 	if err != nil {
 		t.Fatalf(`fail to setup DB for test: %v`, err)
@@ -23,62 +22,60 @@ func TestFetcher_Fetch(t *testing.T) {
 	defer tearDown()
 
 	ctx := context.Background()
-	_, err = db.ExecContext(ctx, `
+	test.Init(ctx, db, []test.Statement{{SQL: `
 CREATE TABLE t0 (
-  id1 INT,
-  id2 INT,
-  col_integer INTEGER,
-  col_text TEXT,
-  col_real REAL,
-  col_blob BLOB,
-  PRIMARY KEY (id1, id2));
-  
+	id1 INT,
+	id2 INT,
+	col_integer INTEGER,
+	col_text TEXT,
+	col_real REAL,
+	col_blob BLOB,
+	PRIMARY KEY (id1, id2));
+	
 CREATE TABLE t1 (
-  id INT,
-  PRIMARY KEY (id),
-  FOREIGN KEY (id) REFERENCES t0 (id1));
-  
+	id INT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (id) REFERENCES t0 (id1));
+	
 CREATE TABLE t2 (
-  id INT,
-  PRIMARY KEY (id),
-  FOREIGN KEY (id) REFERENCES t0 (id2));
-  
+	id INT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (id) REFERENCES t0 (id2));
+	
 CREATE TABLE t3 (
-  id INT,
-  col1 INT,
-  col2 INT,
-  PRIMARY KEY (id),
-  FOREIGN KEY (col1) REFERENCES t1 (id),
-  FOREIGN KEY (col2) REFERENCES t2 (id));
- 
+	id INT,
+	col1 INT,
+	col2 INT,
+	PRIMARY KEY (id),
+	FOREIGN KEY (col1) REFERENCES t1 (id),
+	FOREIGN KEY (col2) REFERENCES t2 (id));
+	
 CREATE TABLE t4 (
-  id INT,
-  PRIMARY KEY (id));
-  
+	id INT,
+	PRIMARY KEY (id));
+	
 CREATE TABLE t5 (
-  id1 INT,
-  id2 INT,
-  PRIMARY KEY (id1, id2),
-  FOREIGN KEY (id1) REFERENCES t4 (id));
+	id1 INT,
+	id2 INT,
+	PRIMARY KEY (id1, id2),
+	FOREIGN KEY (id1) REFERENCES t4 (id));
 
 CREATE TABLE t6 (
-  id1 INT,
-  id2 INT,
-  id3 INT,
-  PRIMARY KEY (id1, id2, id3),
-  FOREIGN KEY (id1, id2) REFERENCES t5 (id1, id2));
-`)
+	id1 INT,
+	id2 INT,
+	id3 INT,
+	PRIMARY KEY (id1, id2, id3),
+	FOREIGN KEY (id1, id2) REFERENCES t5 (id1, id2));
+`}}, nil)
 	if err != nil {
-		tearDown()
-		t.Fatalf("fail to fetch tables: %v", err)
+		t.Fatalf("fail to create tables: %v", err)
 	}
 
 	sut := schema_impl.NewFetcher(db)
 
 	got, err := sut.Fetch(ctx)
 	if err != nil {
-		tearDown()
-		t.Fatal("fail to fetch tables: %w", err)
+		t.Errorf("fail to fetch tables: %v", err)
 	}
 	wantTables := []schema.Table{
 		schema_impl.Table{
@@ -145,27 +142,22 @@ CREATE TABLE t6 (
 
 	gotTables := got.Tables()
 	if len(gotTables) != len(wantTables) {
-		tearDown()
 		t.Errorf("table count not match\n  len(gotTables) = %v\n  len(wantTables) = %v", len(gotTables), len(wantTables))
 	}
 
 	for i, want := range wantTables {
-		if !equalsTable(t, gotTables[i], want) {
-			tearDown()
+		if !equalsTable(gotTables[i], want) {
 			t.Errorf("Table[%d] = %s not match\n  got = %v\n  want = %v", i, want.Name(), spew.Sdump(gotTables[i]), spew.Sdump(want))
 		}
 	}
 
 	gotReferences := got.References()
-	if !equalsReferences(t, gotReferences, wantReferences) {
-		tearDown()
+	if !equalsReferences(gotReferences, wantReferences) {
 		t.Errorf("References not match\n  got = %#v\n  want = %#v", spew.Sdump(gotReferences), spew.Sdump(wantReferences))
 	}
 }
 
-func equalsReferences(t *testing.T, got [][]int, want [][]int) bool {
-	t.Helper()
-
+func equalsReferences(got [][]int, want [][]int) bool {
 	if len(got) != len(want) {
 		return false
 	}
@@ -183,15 +175,12 @@ func equalsReferences(t *testing.T, got [][]int, want [][]int) bool {
 	}
 	return true
 }
-func equalsTable(t *testing.T, got schema.Table, want schema.Table) bool {
-	t.Helper()
 
+func equalsTable(got schema.Table, want schema.Table) bool {
 	if got.Name() != want.Name() {
 		return false
 	}
-	if !slices.EqualFunc(got.Columns(), want.Columns(), func(got, want schema.Column) bool {
-		return equalsColumn(t, got, want)
-	}) {
+	if !slices.EqualFunc(got.Columns(), want.Columns(), equalsColumn) {
 		return false
 	}
 	if !slices.Equal(got.PrimaryKey(), want.PrimaryKey()) {
@@ -200,9 +189,7 @@ func equalsTable(t *testing.T, got schema.Table, want schema.Table) bool {
 	return true
 }
 
-func equalsColumn(t *testing.T, got schema.Column, want schema.Column) bool {
-	t.Helper()
-
+func equalsColumn(got schema.Column, want schema.Column) bool {
 	if got.Name() != want.Name() {
 		return false
 	}

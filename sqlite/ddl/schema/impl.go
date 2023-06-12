@@ -25,7 +25,7 @@ func (c Column) Type() string {
 	return c.TypeVal
 }
 
-func refType[T any]() reflect.Type {
+func RefType[T any]() reflect.Type {
 	var t T
 	return reflect.TypeOf(t)
 }
@@ -33,15 +33,15 @@ func GoType(c schema.Column) reflect.Type {
 	lower := strings.ToLower(c.Type())
 	switch {
 	case strings.Contains(lower, "int"):
-		return refType[sql.NullInt64]()
+		return RefType[sql.NullInt64]()
 	case strings.Contains(lower, "char"), strings.Contains(lower, "clob"), strings.Contains(lower, "text"):
-		return refType[sql.NullString]()
+		return RefType[sql.NullString]()
 	case strings.Contains(lower, "blob"), lower == "":
-		return refType[[]byte]()
+		return RefType[[]byte]()
 	case strings.Contains(lower, "real"), strings.Contains(lower, "floa"), strings.Contains(lower, "doub"):
-		return refType[sql.NullFloat64]()
+		return RefType[sql.NullFloat64]()
 	default:
-		return refType[sql.NullString]()
+		return RefType[sql.NullString]()
 	}
 }
 
