@@ -17,7 +17,6 @@ import (
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
 	spanner_adminpb "cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -45,18 +44,15 @@ func TestDumper_Dump_Order(t *testing.T) {
 	defer tearDown()
 
 	ctx := context.Background()
-	ddl := &spanner_adminpb.UpdateDatabaseDdlRequest{
+	op, err := adminClient.UpdateDatabaseDdl(ctx, &spanner_adminpb.UpdateDatabaseDdlRequest{
 		Database: client.DatabaseName(),
-		Statements: []string{
-			`
+		Statements: []string{`
 CREATE TABLE t (
 	id1 INT64,
 	id2 INT64,
 ) PRIMARY KEY (id1, id2)
-`,
-		},
-	}
-	op, err := adminClient.UpdateDatabaseDdl(ctx, ddl)
+`},
+	})
 	if err != nil {
 		tearDown()
 		t.Fatalf(`fail to wait create tables: %v`, err)

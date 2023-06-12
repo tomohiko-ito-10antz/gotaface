@@ -91,12 +91,14 @@ CREATE TABLE t (
 			tearDown()
 			t.Fatalf("row not found")
 		}
-		var id1 sql.NullInt64
-		var id2 sql.NullInt64
-		var col_integer sql.NullInt64
-		var col_text sql.NullString
-		var col_real sql.NullFloat64
-		var col_blob []byte
+		var (
+			id1         sql.NullInt64
+			id2         sql.NullInt64
+			col_integer sql.NullInt64
+			col_text    sql.NullString
+			col_real    sql.NullFloat64
+			col_blob    []byte
+		)
 		err = got.Scan(&id1, &id2, &col_integer, &col_text, &col_real, &col_blob)
 		if err != nil {
 			tearDown()
