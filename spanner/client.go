@@ -12,6 +12,11 @@ type Queryer interface {
 	Query(ctx context.Context, statement spanner.Statement) *spanner.RowIterator
 }
 
+type Updater interface {
+	Queryer
+	Update(ctx context.Context, stmt spanner.Statement) (rowCount int64, err error)
+}
+
 func ScanRows[Struct any](itr *spanner.RowIterator) ([]*Struct, error) {
 	var s Struct
 	rv := reflect.ValueOf(&s).Elem()

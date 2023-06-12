@@ -2,13 +2,11 @@ package schema
 
 import (
 	"context"
-	"reflect"
 )
 
 type Column interface {
 	Name() string
 	Type() string
-	GoType() reflect.Type
 }
 
 type Table interface {

@@ -47,3 +47,4 @@ services:
     volumes:
       - ./:/work
     working_dir: /work
+    command: ["sh", "spanner/tools/new-instance.sh"]
