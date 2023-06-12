@@ -1,11 +1,11 @@
-package clear_test
+package delete_test
 
 import (
 	"context"
 	"os"
 	"testing"
 
-	"github.com/Jumpaku/gotaface/sqlite/dml/clear"
+	"github.com/Jumpaku/gotaface/sqlite/dml/delete"
 	"github.com/Jumpaku/gotaface/sqlite/test"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestClearer_Clear(t *testing.T) {
+func TestDeleter_Clear(t *testing.T) {
 
 	db, tearDown := test.Setup(t)
 	defer tearDown()
@@ -41,10 +41,10 @@ VALUES
 `,
 	}})
 
-	sut := clear.NewClearer(db)
-	err := sut.Clear(ctx, `t`)
+	sut := delete.NewDeleter(db)
+	err := sut.Delete(ctx, `t`)
 	if err != nil {
-		t.Errorf("fail to clear table: %v", err)
+		t.Errorf("fail to delete table: %v", err)
 	}
 
 	rows := test.ListRows[struct{}](t, db, `t`)

@@ -15,7 +15,6 @@ func dfsImpl(graph *[][]int, u int, visit func(node int) error, visited *[]bool)
 	}
 
 	(*visited)[u] = true
-
 	if err := visit(u); err != nil {
 		return err
 	}
@@ -24,7 +23,6 @@ func dfsImpl(graph *[][]int, u int, visit func(node int) error, visited *[]bool)
 		if (*visited)[v] {
 			continue
 		}
-
 		if err := dfsImpl(graph, v, visit, visited); err != nil {
 			return err
 		}

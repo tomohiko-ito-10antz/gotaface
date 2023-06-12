@@ -1,4 +1,4 @@
-package clear_test
+package delete_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jumpaku/gotaface/spanner/dml/clear"
+	"github.com/Jumpaku/gotaface/spanner/dml/delete"
 	spanner_test "github.com/Jumpaku/gotaface/spanner/test"
 
 	"cloud.google.com/go/spanner"
@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestClearer_Clear(t *testing.T) {
+func TestDeleter_Clear(t *testing.T) {
 	adminClient, client, tearDown := spanner_test.Setup(t, fmt.Sprintf(`dml_clear_%d`, time.Now().UnixNano()))
 	defer tearDown()
 
@@ -44,17 +44,17 @@ VALUES
 `)})
 
 	_, err := client.ReadWriteTransaction(context.Background(), func(ctx context.Context, tx *spanner.ReadWriteTransaction) error {
-		sut := clear.NewClearer(tx)
+		sut := delete.NewDeleter(tx)
 
-		err := sut.Clear(ctx, `t`)
+		err := sut.Delete(ctx, `t`)
 		if err != nil {
-			return fmt.Errorf("fail to clear table: %w", err)
+			return fmt.Errorf("fail to delete table: %w", err)
 		}
 
 		return nil
 	})
 	if err != nil {
-		t.Errorf(`fail to clear table: %v`, err)
+		t.Errorf(`fail to delete table: %v`, err)
 	}
 
 	tx := client.ReadOnlyTransaction()
