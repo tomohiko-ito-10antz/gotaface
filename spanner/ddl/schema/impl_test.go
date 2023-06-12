@@ -8,10 +8,6 @@ import (
 	"github.com/Jumpaku/gotaface/spanner/ddl/schema"
 )
 
-func refType[T any]() reflect.Type {
-	var t T
-	return reflect.TypeOf(t)
-}
 func TestGoType(t *testing.T) {
 	type testCase struct {
 		input schema.Column
@@ -20,43 +16,43 @@ func TestGoType(t *testing.T) {
 	testCases := []testCase{
 		{
 			input: schema.Column{TypeVal: "INT64"},
-			want:  refType[spanner.NullInt64](),
+			want:  schema.RefType[spanner.NullInt64](),
 		}, {
 			input: schema.Column{TypeVal: "STRING(MAX)"},
-			want:  refType[spanner.NullString](),
+			want:  schema.RefType[spanner.NullString](),
 		}, {
 			input: schema.Column{TypeVal: "BOOL"},
-			want:  refType[spanner.NullBool](),
+			want:  schema.RefType[spanner.NullBool](),
 		}, {
 			input: schema.Column{TypeVal: "FLOAT64"},
-			want:  refType[spanner.NullFloat64](),
+			want:  schema.RefType[spanner.NullFloat64](),
 		}, {
 			input: schema.Column{TypeVal: "TIMESTAMP"},
-			want:  refType[spanner.NullTime](),
+			want:  schema.RefType[spanner.NullTime](),
 		}, {
 			input: schema.Column{TypeVal: "DATE"},
-			want:  refType[spanner.NullDate](),
+			want:  schema.RefType[spanner.NullDate](),
 		}, {
 			input: schema.Column{TypeVal: "NUMERIC"},
-			want:  refType[spanner.NullNumeric](),
+			want:  schema.RefType[spanner.NullNumeric](),
 		}, {
 			input: schema.Column{TypeVal: "BYTES(255)"},
-			want:  refType[[]byte](),
+			want:  schema.RefType[[]byte](),
 		}, {
 			input: schema.Column{TypeVal: "JSON"},
-			want:  refType[spanner.NullJSON](),
+			want:  schema.RefType[spanner.NullJSON](),
 		}, {
 			input: schema.Column{TypeVal: "ARRAY<INT64>"},
-			want:  refType[[]spanner.NullInt64](),
+			want:  schema.RefType[[]spanner.NullInt64](),
 		}, {
 			input: schema.Column{TypeVal: "ARRAY<STRUCT<INT64>>"},
-			want:  refType[[]spanner.NullRow](),
+			want:  schema.RefType[[]spanner.NullRow](),
 		}, {
 			input: schema.Column{TypeVal: "STRUCT<x INT64, y STRING(12)>"},
-			want:  refType[spanner.NullRow](),
+			want:  schema.RefType[spanner.NullRow](),
 		}, {
 			input: schema.Column{TypeVal: "STRUCT<ARRAY<INT64>>"},
-			want:  refType[spanner.NullRow](),
+			want:  schema.RefType[spanner.NullRow](),
 		},
 	}
 
