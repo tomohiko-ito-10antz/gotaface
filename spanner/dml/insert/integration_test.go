@@ -17,26 +17,11 @@ import (
 	spanner_test "github.com/Jumpaku/gotaface/spanner/test"
 )
 
-var (
-	testSpannerProject  string
-	testSpannerInstance string
-)
-var skipTest bool
-
 func TestMain(m *testing.M) {
-	testSpannerProject = os.Getenv(spanner_test.EnvTestSpannerProject)
-	testSpannerInstance = os.Getenv(spanner_test.EnvTestSpannerInstance)
-	skipTest = testSpannerProject == "" || testSpannerInstance == ""
 	os.Exit(m.Run())
 }
 func TestInserter_Insert(t *testing.T) {
-	if skipTest {
-		t.Skip()
-	}
-	adminClient, client, tearDown, err := spanner_test.Setup(testSpannerProject, testSpannerInstance, fmt.Sprintf(`dml_dump_%d`, time.Now().Unix()))
-	if err != nil {
-		t.Fatalf(`fail to set up spanner: %v`, err)
-	}
+	adminClient, client, tearDown := spanner_test.Setup(t, fmt.Sprintf(`dml_dump_%d`, time.Now().Unix()))
 	defer tearDown()
 
 	ctx := context.Background()

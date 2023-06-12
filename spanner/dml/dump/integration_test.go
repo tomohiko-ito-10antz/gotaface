@@ -19,28 +19,12 @@ import (
 	spanner_adminpb "cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
 )
 
-var (
-	testSpannerProject  string
-	testSpannerInstance string
-)
-var skipTest bool
-
 func TestMain(m *testing.M) {
-	testSpannerProject = os.Getenv(spanner_test.EnvTestSpannerProject)
-	testSpannerInstance = os.Getenv(spanner_test.EnvTestSpannerInstance)
-	skipTest = testSpannerProject == "" || testSpannerInstance == ""
 	os.Exit(m.Run())
 }
 
 func TestDumper_Dump_Order(t *testing.T) {
-	if skipTest {
-		t.Skipf(`environment variables %s and %s are required`, spanner_test.EnvTestSpannerProject, spanner_test.EnvTestSpannerInstance)
-	}
-
-	adminClient, client, tearDown, err := spanner_test.Setup(testSpannerProject, testSpannerInstance, fmt.Sprintf(`dml_dump_%d`, time.Now().Unix()))
-	if err != nil {
-		t.Fatalf(`fail to set up spanner: %v`, err)
-	}
+	adminClient, client, tearDown := spanner_test.Setup(t, fmt.Sprintf(`dml_dump_%d`, time.Now().Unix()))
 	defer tearDown()
 
 	ctx := context.Background()
@@ -133,14 +117,7 @@ VALUES
 }
 
 func TestDumper_Dump_Types(t *testing.T) {
-	if skipTest {
-		t.Skipf(`environment variables %s and %s are required`, spanner_test.EnvTestSpannerProject, spanner_test.EnvTestSpannerInstance)
-	}
-
-	adminClient, client, tearDown, err := spanner_test.Setup(testSpannerProject, testSpannerInstance, fmt.Sprintf(`dml_insert_%d`, time.Now().Unix()))
-	if err != nil {
-		t.Fatalf(`fail to set up spanner: %v`, err)
-	}
+	adminClient, client, tearDown := spanner_test.Setup(t, fmt.Sprintf(`dml_insert_%d`, time.Now().Unix()))
 	defer tearDown()
 
 	ctx := context.Background()

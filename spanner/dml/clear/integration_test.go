@@ -14,37 +14,12 @@ import (
 	"github.com/Jumpaku/gotaface/spanner/dml/clear"
 )
 
-var (
-	testSpannerProject  string
-	testSpannerInstance string
-)
-var skipTest bool
-
 func TestMain(m *testing.M) {
-	initialize()
 	os.Exit(m.Run())
 }
 
-func initialize() {
-	if testSpannerProject = os.Getenv(spanner_test.EnvTestSpannerProject); testSpannerProject == "" {
-		skipTest = true
-		return
-	}
-	if testSpannerInstance = os.Getenv(spanner_test.EnvTestSpannerInstance); testSpannerInstance == "" {
-		skipTest = true
-		return
-	}
-}
-
 func TestClearer_Clear(t *testing.T) {
-	if skipTest {
-		t.Skipf(`environment variables %s and %s are required`, spanner_test.EnvTestSpannerProject, spanner_test.EnvTestSpannerInstance)
-	}
-
-	spannerAdminClient, spannerClient, tearDown, err := spanner_test.Setup(testSpannerProject, testSpannerInstance, fmt.Sprintf(`dml_insert_%d`, time.Now().Unix()))
-	if err != nil {
-		t.Fatalf(`fail to set up spanner: %v`, err)
-	}
+	spannerAdminClient, spannerClient, tearDown := spanner_test.Setup(t, fmt.Sprintf(`dml_insert_%d`, time.Now().Unix()))
 	defer tearDown()
 
 	ctx := context.Background()
