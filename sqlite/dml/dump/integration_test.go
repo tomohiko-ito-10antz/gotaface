@@ -10,6 +10,7 @@ import (
 	schema_impl "github.com/Jumpaku/gotaface/sqlite/ddl/schema"
 	"github.com/Jumpaku/gotaface/sqlite/dml/dump"
 	"github.com/Jumpaku/gotaface/sqlite/test"
+	"golang.org/x/exp/slices"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -23,8 +24,8 @@ func TestDumper_Dump(t *testing.T) {
 	db, tearDown := test.Setup(t)
 	defer tearDown()
 
-	ctx := context.Background()
-	_, err := db.ExecContext(ctx, `
+	test.Init(t, db, []test.Statement{{
+		SQL: `
 CREATE TABLE t (
 	id2 INT,
 	id1 INT,
@@ -40,21 +41,18 @@ VALUES
 	(2, 2, 3, "def", 1.50, X'323233646566'),
 	(1, 1, 2, "ghi", 1.75, X'313132676869'),
 	(2, 1, 1, "jkl", 2.00, X'3231316a6b6c');
-`)
-	if err != nil {
-		tearDown()
-		t.Fatalf("fail to fetch tables: %v", err)
-	}
+`},
+	})
 
+	ctx := context.Background()
 	schema, err := schema_impl.NewFetcher(db).Fetch(ctx)
 	if err != nil {
-		tearDown()
-		t.Fatal("fail to fetch schema: %w", err)
+		t.Fatalf("fail to fetch schema: %v", err)
 	}
 
 	sut := dump.NewDumper(db, schema)
 
-	got, err := sut.Dump(context.Background(), `t`)
+	got, err := sut.Dump(ctx, `t`)
 	if err != nil {
 		tearDown()
 		t.Errorf("fail to dump table: %v", err)
@@ -92,76 +90,28 @@ VALUES
 	}
 
 	if len(got) != len(want) {
-		tearDown()
 		t.Errorf("table count not match\n  len(got) = %v\n  len(want) = %v", len(got), len(want))
 	}
 
 	for i, want := range want {
-		{
-			key := "id1"
-			got := got[i]
-			gotVal, ok := got[key]
+		got := got[i]
+		for key, want := range want {
+			got, ok := got[key]
 			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
+				t.Errorf("i = %d: gotVal does not have key %s", i, key)
 			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
+			if !equals(got, want) {
+				t.Errorf("i = %d, key = %s: got != want\n  gotVal  = %#v\n  wantVal = %#v", i, key, got, want)
 			}
 		}
-		{
-			key := "id2"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_integer"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_text"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_real"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if gotVal != want[key] {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
-		{
-			key := "col_blob"
-			got := got[i]
-			gotVal, ok := got[key]
-			if !ok {
-				t.Errorf("i = %d: gotVal does not have key %s\n  gotVal  = %v\n  wantVal = %v", i, key, got, want)
-			}
-			if string(gotVal.([]byte)) != string(want[key].([]byte)) {
-				t.Errorf("i = %d: got[%s] != want[%s]\n  gotVal  = %#v\n  wantVal = %#v", i, key, key, got, want)
-			}
-		}
+	}
+}
+
+func equals(got any, want any) bool {
+	switch want := want.(type) {
+	default:
+		return got == want
+	case []byte:
+		return slices.Equal(got.([]byte), want)
 	}
 }
