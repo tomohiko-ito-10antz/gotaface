@@ -24,7 +24,7 @@ func (c Column) Type() string {
 	return c.TypeVal
 }
 
-func refType[T any]() reflect.Type {
+func RefType[T any]() reflect.Type {
 	var t T
 	return reflect.TypeOf(t)
 }
@@ -33,29 +33,29 @@ func GoType(c schema.Column) reflect.Type {
 	lower := strings.ToLower(c.Type())
 	switch {
 	case strings.HasPrefix(lower, "int64"):
-		return refType[spanner.NullInt64]()
+		return RefType[spanner.NullInt64]()
 	case strings.HasPrefix(lower, "string"):
-		return refType[spanner.NullString]()
+		return RefType[spanner.NullString]()
 	case strings.HasPrefix(lower, "bool"):
-		return refType[spanner.NullBool]()
+		return RefType[spanner.NullBool]()
 	case strings.HasPrefix(lower, "float64"):
-		return refType[spanner.NullFloat64]()
+		return RefType[spanner.NullFloat64]()
 	case strings.HasPrefix(lower, "timestamp"):
-		return refType[spanner.NullTime]()
+		return RefType[spanner.NullTime]()
 	case strings.HasPrefix(lower, "date"):
-		return refType[spanner.NullDate]()
+		return RefType[spanner.NullDate]()
 	case strings.HasPrefix(lower, "numeric"):
-		return refType[spanner.NullNumeric]()
+		return RefType[spanner.NullNumeric]()
 	case strings.HasPrefix(lower, "bytes"):
-		return refType[[]byte]()
+		return RefType[[]byte]()
 	case strings.HasPrefix(lower, "json"):
-		return refType[spanner.NullJSON]()
+		return RefType[spanner.NullJSON]()
 	case strings.HasPrefix(lower, "array<"):
 		return reflect.SliceOf(GoType(Column{TypeVal: lower[6 : len(lower)-1]}))
 	case strings.HasPrefix(lower, "struct"):
-		return refType[spanner.NullRow]()
+		return RefType[spanner.NullRow]()
 	default:
-		return refType[spanner.GenericColumnValue]()
+		return RefType[spanner.GenericColumnValue]()
 	}
 }
 
