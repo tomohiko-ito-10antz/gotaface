@@ -9,6 +9,7 @@ import (
 	"github.com/Jumpaku/gotaface/dml"
 	"github.com/Jumpaku/gotaface/sqlite/dml/insert"
 	"github.com/Jumpaku/gotaface/sqlite/test"
+	"golang.org/x/exp/slices"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -21,8 +22,7 @@ func TestInserter_Insert(t *testing.T) {
 	db, tearDown := test.Setup(t)
 	defer tearDown()
 
-	ctx := context.Background()
-	_, err := db.ExecContext(ctx, `
+	test.Init(t, db, []test.Statement{{SQL: `
 CREATE TABLE t (
 	id2 INT,
 	id1 INT,
@@ -31,12 +31,8 @@ CREATE TABLE t (
 	col_real REAL,
 	col_blob BLOB,
 	PRIMARY KEY (id1, id2));
-`)
-	if err != nil {
-		tearDown()
-		t.Fatalf("fail to create tables: %v", err)
-	}
-	rows := dml.Rows{
+`}})
+	input := dml.Rows{
 		{
 			`id1`:         sql.NullInt64{Valid: true, Int64: 1},
 			`id2`:         sql.NullInt64{Valid: true, Int64: 1},
@@ -68,54 +64,47 @@ CREATE TABLE t (
 		},
 	}
 
+	ctx := context.Background()
+
 	sut := insert.NewInserter(db)
-	err = sut.Insert(ctx, `t`, rows)
+
+	err := sut.Insert(ctx, `t`, input)
 	if err != nil {
-		tearDown()
 		t.Errorf("fail to insert rows: %v", err)
 	}
 
-	for i, want := range rows {
-		got, err := db.QueryContext(ctx, `SELECT id1, id2, col_integer, col_text, col_real, col_blob FROM t WHERE id1 = ? AND id2 = ?`,
-			want["id1"].(sql.NullInt64).Int64,
-			want["id2"].(sql.NullInt64).Int64,
-		)
-		if err != nil {
-			tearDown()
-			t.Fatalf("fail to select row: %v", err)
+	for i, inputRow := range input {
+		type Row struct {
+			Id1         sql.NullInt64
+			Id2         sql.NullInt64
+			Col_integer sql.NullInt64
+			Col_text    sql.NullString
+			Col_real    sql.NullFloat64
+			Col_blob    []byte
 		}
-		if !got.Next() {
-			tearDown()
-			t.Fatalf("row not found")
-		}
-		var (
-			id1         sql.NullInt64
-			id2         sql.NullInt64
-			col_integer sql.NullInt64
-			col_text    sql.NullString
-			col_real    sql.NullFloat64
-			col_blob    []byte
-		)
-		err = got.Scan(&id1, &id2, &col_integer, &col_text, &col_real, &col_blob)
-		if err != nil {
-			tearDown()
-			t.Fatalf("fail to scan row: %v", err)
+		found := test.FindRow[Row](t, db, `t`, map[string]any{"id1": inputRow["id1"].(sql.NullInt64).Int64, "id2": inputRow["id2"].(sql.NullInt64).Int64})
+		if found == nil {
+			t.Errorf("row not found")
 		}
 
-		if id1 != want["id1"] {
-			t.Errorf("i = %d: id1 != want[`id1`]\n  id1  = %#v\n  want['id1'] = %#v", i, id1, want[`id1`])
+		want := Row{
+			Id1:         inputRow["id1"].(sql.NullInt64),
+			Id2:         inputRow["id2"].(sql.NullInt64),
+			Col_integer: inputRow["col_integer"].(sql.NullInt64),
+			Col_text:    inputRow["col_text"].(sql.NullString),
+			Col_real:    inputRow["col_real"].(sql.NullFloat64),
+			Col_blob:    inputRow["col_blob"].([]byte),
 		}
-		if id2 != want["id2"] {
-			t.Errorf("i = %d: id2 != want[`id2`]\n  id1  = %#v\n  want['id2'] = %#v", i, id2, want[`id2`])
-		}
-		if col_integer != want["col_integer"] {
-			t.Errorf("i = %d: col_integer != want[`col_integer`]\n  col_integer  = %#v\n  want['col_integer'] = %#v", i, col_integer, want[`col_integer`])
-		}
-		if col_text != want["col_text"] {
-			t.Errorf("i = %d: col_text != want[`col_text`]\n  col_text  = %#v\n  want['col_text'] = %#v", i, col_text, want[`col_text`])
-		}
-		if string(col_blob) != string(want["col_blob"].([]byte)) {
-			t.Errorf("i = %d: col_blob != want[`col_blob`]\n  col_blob  = %#v\n  want['col_blob'] = %#v", i, col_blob, want[`col_blob`])
+
+		equals := true
+		equals = equals || found.Id1 != want.Id1
+		equals = equals || found.Id2 != want.Id2
+		equals = equals || found.Col_integer != want.Col_integer
+		equals = equals || found.Col_text != want.Col_text
+		equals = equals || found.Col_real != want.Col_real
+		equals = equals || !slices.Equal(found.Col_blob, want.Col_blob)
+		if !equals {
+			t.Errorf("i = %d, id1\n found = %#v\n   want = %#v", i, found, want)
 		}
 	}
 }

@@ -60,17 +60,26 @@ func StructScanRowValue[Struct any](scanRowValue ScanRowValue) Struct {
 }
 
 func ScanRows(rows *sql.Rows, scanTypes ScanRowTypes) ([]ScanRowValue, error) {
-	columns, err := rows.ColumnTypes()
+	lowerColumns, err := rows.Columns()
 	if err != nil {
 		return nil, fmt.Errorf("fail to scan row values: %w", err)
 	}
+	for i, column := range lowerColumns {
+		lowerColumns[i] = strings.ToLower(column)
+	}
+
+	lowerColumnScanType := ScanRowTypes{}
+	for column, scanType := range scanTypes {
+		lowerColumnScanType[strings.ToLower(column)] = scanType
+	}
+
 	rowValues := []ScanRowValue{}
 	for rows.Next() {
-		pointers := make([]any, len(columns))
-		for i, column := range columns {
-			scanType, ok := scanTypes[column.Name()]
+		pointers := make([]any, len(lowerColumns))
+		for i, column := range lowerColumns {
+			scanType, ok := lowerColumnScanType[lowerColumns[i]]
 			if !ok {
-				return nil, fmt.Errorf("fail to scan row Any %s", column.Name())
+				return nil, fmt.Errorf("fail to scan row Any %s", column)
 			}
 
 			pointers[i] = reflect.New(scanType).Interface()
@@ -82,8 +91,8 @@ func ScanRows(rows *sql.Rows, scanTypes ScanRowTypes) ([]ScanRowValue, error) {
 		}
 
 		rowValue := map[string]any{}
-		for i, column := range columns {
-			rowValue[column.Name()] = reflect.ValueOf(pointers[i]).Elem().Interface() // values[i]
+		for i, column := range lowerColumns {
+			rowValue[column] = reflect.ValueOf(pointers[i]).Elem().Interface()
 		}
 
 		rowValues = append(rowValues, rowValue)
