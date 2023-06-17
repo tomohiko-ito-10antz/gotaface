@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/spanner v1.46.0
 	github.com/mattn/go-sqlite3 v1.14.16
 	golang.org/x/exp v0.0.0-20230519143937-03e91628a987
+	golang.org/x/sync v0.2.0
 )
 
 require (
@@ -15,7 +16,7 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.110.0 // indirect
+	cloud.google.com/go v0.110.0
 	cloud.google.com/go/compute v1.19.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
