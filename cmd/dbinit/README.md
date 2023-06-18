@@ -23,13 +23,13 @@ gf-dbinit fetches schema information to prepare for the initialization. To provi
 
 ## Input
 
-gf-dbinit expects a JSON array as input from stdin. The JSON array should have the following structure:
+gf-dbinit expects a JSON array as input from stdin. The JSON array should have the following structure `DBInitInput`:
 
 ```ts
-type InitializedTables = []{
-        "name": string, // name of a table to be initialized.
-        "rows": []Row   // rows inserted into the table after deletion.
-}
+type DBInitInput = {
+    "name": string, // name of a table to be initialized.
+    "rows": Row[]   // rows inserted into the table after deletion.
+}[]
 type Row = { 
     // mapping from column name to column value in a row
     [column: string]: ColumnValue

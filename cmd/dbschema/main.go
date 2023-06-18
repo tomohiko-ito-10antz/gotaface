@@ -2,23 +2,21 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 
-	"github.com/Jumpaku/gotaface/cli/dbinit"
-
-	_ "embed"
+	"github.com/Jumpaku/gotaface/cli/dbschema"
 )
 
 //go:embed README.md
 var Usage string
 
 func main() {
-	cli := flag.NewFlagSet("gf-dbinit", flag.ExitOnError)
+	cli := flag.NewFlagSet("gf-dbschema", flag.ExitOnError)
 	cli.Usage = func() { fmt.Println(Usage) }
-	schemaJSON := cli.String(`schema`, "", "specifies a path <schema-json> of a JSON-based schema file")
 
 	if err := cli.Parse(os.Args[1:]); err != nil {
 		log.Fatalf(`cannot parse command line arguments: %v`, err)
@@ -30,7 +28,7 @@ func main() {
 	}
 
 	driver, dataSource := args[0], args[1]
-	runner, err := dbinit.BuildRunner(driver, dataSource, *schemaJSON)
+	runner, err := dbschema.BuildRunner(driver, dataSource)
 	if err != nil {
 		log.Fatalf(`fail to execute: %v`, err)
 	}
