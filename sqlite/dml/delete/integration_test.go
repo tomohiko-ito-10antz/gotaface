@@ -7,8 +7,6 @@ import (
 
 	"github.com/Jumpaku/gotaface/sqlite/dml/delete"
 	"github.com/Jumpaku/gotaface/sqlite/test"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestMain(m *testing.M) {
@@ -17,7 +15,7 @@ func TestMain(m *testing.M) {
 
 func TestDeleter_Clear(t *testing.T) {
 
-	db, tearDown := test.Setup(t)
+	db, tearDown := test.Setup(t, "")
 	defer tearDown()
 
 	ctx := context.Background()

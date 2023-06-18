@@ -10,18 +10,21 @@ import (
 	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
 )
 
-type spannerRunner struct {
-	dataSource string // not nil
+type SpannerRunner struct {
+	DataSource string // not nil
 }
 
-func (r *spannerRunner) Run(ctx context.Context, stdin io.Reader, stdout io.Writer) error {
-	client, err := spanner.NewClient(ctx, r.dataSource)
+func (r *SpannerRunner) Run(ctx context.Context, stdin io.Reader, stdout io.Writer) error {
+	client, err := spanner.NewClient(ctx, r.DataSource)
 	if err != nil {
 		return fmt.Errorf(`fail to create spanner client: %w`, err)
 	}
 	defer client.Close()
 
-	fetcher := spanner_schema.NewFetcher(client.Single())
+	tx := client.ReadOnlyTransaction()
+	defer tx.Close()
+
+	fetcher := spanner_schema.NewFetcher(tx)
 	schema, err := fetcher.Fetch(ctx)
 	if err != nil {
 		return fmt.Errorf(`fail to fetch table schema: %w`, err)

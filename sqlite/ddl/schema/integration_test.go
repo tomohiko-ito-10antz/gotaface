@@ -10,12 +10,11 @@ import (
 	schema_impl "github.com/Jumpaku/gotaface/sqlite/ddl/schema"
 	"github.com/Jumpaku/gotaface/sqlite/test"
 
-	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/exp/slices"
 )
 
 func TestFetcher_Fetch(t *testing.T) {
-	db, tearDown := test.Setup(t)
+	db, tearDown := test.Setup(t, "")
 	defer tearDown()
 
 	ctx := context.Background()

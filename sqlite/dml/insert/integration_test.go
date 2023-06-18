@@ -10,8 +10,6 @@ import (
 	"github.com/Jumpaku/gotaface/sqlite/dml/insert"
 	"github.com/Jumpaku/gotaface/sqlite/test"
 	"golang.org/x/exp/slices"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestMain(m *testing.M) {
@@ -19,7 +17,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestInserter_Insert(t *testing.T) {
-	db, tearDown := test.Setup(t)
+	db, tearDown := test.Setup(t, "")
 	defer tearDown()
 
 	test.Init(t, db, []test.Statement{{SQL: `

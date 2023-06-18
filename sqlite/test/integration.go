@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/Jumpaku/gotaface/dbsql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Statement struct {
@@ -14,27 +16,40 @@ type Statement struct {
 	Params []any
 }
 
-func Setup(t *testing.T) (interface {
+func Setup(t *testing.T, dbPath string) (interface {
 	dbsql.Execer
 	dbsql.Queryer
 }, func()) {
 	t.Helper()
 
-	db, err := sql.Open("sqlite3", ":memory:")
+	dataSource := dbPath
+	if dataSource == "" {
+		dataSource = ":memory:"
+	}
+
+	db, err := sql.Open("sqlite3", dataSource)
 	if err != nil {
 		t.Fatalf(`fail to open sqlite DB: %v`, err)
 	}
 
-	conn, err := db.Conn(context.Background())
-	if err != nil {
-		t.Fatalf(`fail to get sqlite connection: %v`, err)
-	}
+	if dbPath == "" {
+		conn, err := db.Conn(context.Background())
+		if err != nil {
+			t.Fatalf(`fail to get sqlite connection: %v`, err)
+		}
+		tearDown := func() {
+			conn.Close()
+			db.Close()
+		}
+		return conn, tearDown
+	} else {
+		tearDown := func() {
+			db.Close()
+			os.Remove(dbPath)
+		}
 
-	tearDown := func() {
-		db.Close()
+		return db, tearDown
 	}
-
-	return conn, tearDown
 }
 
 func Init(t *testing.T, execer dbsql.Execer, stmts []Statement) {
