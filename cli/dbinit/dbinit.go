@@ -6,9 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 
-	"github.com/Jumpaku/gotaface/cli"
 	"github.com/Jumpaku/gotaface/ddl/schema"
 	"github.com/Jumpaku/gotaface/dml"
 	"github.com/Jumpaku/gotaface/dml/delete"
@@ -16,38 +14,6 @@ import (
 	"github.com/Jumpaku/gotaface/topological"
 	"golang.org/x/sync/errgroup"
 )
-
-func BuildRunner(driver string, dataSource string, schemaJSON string) (cli.Runner, error) {
-	var fetcher schema.Fetcher
-	if schemaJSON != "" {
-		f, err := os.Open(schemaJSON)
-		if err != nil {
-			return nil, fmt.Errorf(`fail to open file: %s: %w`, schemaJSON, err)
-		}
-
-		b, err := io.ReadAll(f)
-		if err != nil {
-			return nil, fmt.Errorf(`fail to read file: %s : %w`, schemaJSON, err)
-		}
-
-		fetcher = schema.NewFetcher(b)
-	}
-
-	switch driver {
-	default:
-		return nil, fmt.Errorf(`unsupported driver %s`, driver)
-	case `spanner`:
-		return &spannerRunner{dataSource: dataSource, fetcher: fetcher}, nil
-	case `sqlite3`:
-		return &sqliteRunner{dataSource: dataSource, fetcher: fetcher}, nil
-	}
-}
-
-type DBInitDriver struct {
-	Schema   schema.Schema
-	Deleter  delete.Deleter
-	Inserter insert.Inserter
-}
 
 type DBInitInput []struct {
 	Name string           `json:"name"`

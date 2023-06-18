@@ -101,36 +101,23 @@ func (fetcher jsonFetcher) Fetch(ctx context.Context) (Schema, error) {
 	return schema, nil
 }
 
-func ReadSchema(reader io.Reader) (Schema, error) {
+func ReadSchema(reader io.Reader) (SchemaFormat, error) {
+	var schema SchemaFormat
+
 	b, err := io.ReadAll(reader)
 	if err != nil {
-		return nil, fmt.Errorf(`fail to read schema data: %w`, err)
+		return schema, fmt.Errorf(`fail to read schema data: %w`, err)
 	}
-	var schema SchemaFormat
+
 	if err := schema.UnmarshalJSON(b); err != nil {
-		return nil, fmt.Errorf(`fail to unmarshal JSON-based schema data: %w`, err)
+		return schema, fmt.Errorf(`fail to unmarshal JSON-based schema data: %w`, err)
 	}
+
 	return schema, nil
 }
 
-func WriteSchema(schema Schema, writer io.Writer) error {
-	schemaFormat := SchemaFormat{ReferencesVal: schema.References()}
-	for _, table := range schema.Tables() {
-		tableFormat := TableFormat{
-			NameVal:       table.Name(),
-			PrimaryKeyVal: table.PrimaryKey(),
-		}
-		for _, column := range table.Columns() {
-			tableFormat.ColumnsVal = append(tableFormat.ColumnsVal, ColumnFormat{
-				NameVal: column.Name(),
-				TypeVal: column.Type(),
-			})
-		}
-
-		schemaFormat.TablesVal = append(schemaFormat.TablesVal, tableFormat)
-	}
-
-	b, err := schemaFormat.MarshalJSON()
+func WriteSchema(schema SchemaFormat, writer io.Writer) error {
+	b, err := schema.MarshalJSON()
 	if err != nil {
 		return fmt.Errorf(`fail to marshal JSON-based schema data: %w`, err)
 	}

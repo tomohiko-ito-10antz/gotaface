@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"cloud.google.com/go/spanner"
+	"github.com/Jumpaku/gotaface/cli/dbschema"
 	json_schema "github.com/Jumpaku/gotaface/ddl/schema"
 	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
 )
@@ -24,8 +25,7 @@ func (r *SpannerRunner) Run(ctx context.Context, stdin io.Reader, stdout io.Writ
 	tx := client.ReadOnlyTransaction()
 	defer tx.Close()
 
-	fetcher := spanner_schema.NewFetcher(tx)
-	schema, err := fetcher.Fetch(ctx)
+	schema, err := dbschema.FetchSchema(ctx, spanner_schema.NewFetcher(tx))
 	if err != nil {
 		return fmt.Errorf(`fail to fetch table schema: %w`, err)
 	}

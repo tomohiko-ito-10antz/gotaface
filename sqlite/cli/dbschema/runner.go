@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/Jumpaku/gotaface/cli/dbschema"
 	json_schema "github.com/Jumpaku/gotaface/ddl/schema"
 	sqlite_schema "github.com/Jumpaku/gotaface/sqlite/ddl/schema"
 	_ "github.com/mattn/go-sqlite3"
@@ -21,9 +22,7 @@ func (r *SqliteRunner) Run(ctx context.Context, stdin io.Reader, stdout io.Write
 		return fmt.Errorf(`fail to create sqlite client: %w`, err)
 	}
 
-	fetcher := sqlite_schema.NewFetcher(db)
-
-	schema, err := fetcher.Fetch(ctx)
+	schema, err := dbschema.FetchSchema(ctx, sqlite_schema.NewFetcher(db))
 	if err != nil {
 		return fmt.Errorf(`fail to fetch table schema: %w`, err)
 	}
