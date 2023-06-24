@@ -3,33 +3,31 @@ package dbschema
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 
-	"github.com/Jumpaku/gotaface/cli/dbschema"
-	json_schema "github.com/Jumpaku/gotaface/ddl/schema"
 	sqlite_schema "github.com/Jumpaku/gotaface/sqlite/ddl/schema"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type SqliteRunner struct {
+type SQLiteRunner struct {
 	DataSource string // not nil
 }
 
-func (r *SqliteRunner) Run(ctx context.Context, stdin io.Reader, stdout io.Writer) error {
+func (r *SQLiteRunner) Run(ctx context.Context, stdin io.Reader, stdout io.Writer) error {
 	db, err := sql.Open("sqlite3", r.DataSource)
 	if err != nil {
 		return fmt.Errorf(`fail to create sqlite client: %w`, err)
 	}
 
-	schema, err := dbschema.FetchSchema(ctx, sqlite_schema.NewFetcher(db))
+	schema, err := sqlite_schema.NewFetcher(db).Fetch(ctx)
 	if err != nil {
 		return fmt.Errorf(`fail to fetch table schema: %w`, err)
 	}
 
-	err = json_schema.WriteSchema(schema, stdout)
-	if err != nil {
-		return fmt.Errorf(`fail to output schema: %w`, err)
+	if err := json.NewEncoder(stdout).Encode(schema); err != nil {
+		return fmt.Errorf(`fail to encode table schema as JSON: %w`, err)
 	}
 
 	return nil

@@ -25,12 +25,12 @@ No specific input is required.
 
 ## Output
 
-gf-dbschema outputs the schema information of the tables to stdout in JSON format. The schema information is represented as the following structure `DBSchemaOutput`:
+gf-dbschema outputs the schema information of the tables to stdout in JSON format. The schema information is represented as a structure that is assignable to the following structure `DBSchemaOutput`:
 
 ```ts
 type DBSchemaOutput = {
     tables: Table[]; // array of information of tables
-    references: number[][]; // 
+    references: number[][]; // "references[x] is [a, b]" means that tables[x] references tables[a] and tables[b]
 }
 type Table = {
     name: string; // name of a table

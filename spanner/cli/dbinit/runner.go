@@ -39,7 +39,7 @@ func (r *SpannerRunner) Run(ctx context.Context, stdin io.Reader, stdout io.Writ
 		return fmt.Errorf(`fail to fetch table schema: %w`, err)
 	}
 
-	deleteTables, insertTableRows, err := dbinit.PrepareTableRows(ctx, schema, targets)
+	deleteTables, insertTableRows, err := dbinit.PrepareTableRows(schema, targets)
 	if err != nil {
 		return fmt.Errorf(`fail to prepare tables: %w`, err)
 	}

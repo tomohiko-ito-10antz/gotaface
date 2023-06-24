@@ -1,37 +1,25 @@
 package dbschema
 
 import (
-	"context"
-	"fmt"
+	"log"
 
+	"github.com/Jumpaku/gotaface/cli"
 	"github.com/Jumpaku/gotaface/ddl/schema"
+	"github.com/Jumpaku/gotaface/errors"
+	dbschema_spanner "github.com/Jumpaku/gotaface/spanner/cli/dbschema"
+	dbschema_sqlite "github.com/Jumpaku/gotaface/sqlite/cli/dbschema"
 )
 
 type DBSchemaOutput = schema.SchemaFormat
 
-func FetchSchema(ctx context.Context, fetcher schema.Fetcher) (DBSchemaOutput, error) {
-	var output DBSchemaOutput
-
-	s, err := fetcher.Fetch(ctx)
-	if err != nil {
-		return output, fmt.Errorf(`fail to fetch table schema: %w`, err)
+func NewRunner(driver string, dataSource string) cli.Runner {
+	switch driver {
+	default:
+		log.Fatalf(`unsupported driver %s`, driver)
+	case `spanner`:
+		return &dbschema_spanner.SpannerRunner{DataSource: dataSource}
+	case `sqlite3`:
+		return &dbschema_sqlite.SQLiteRunner{DataSource: dataSource}
 	}
-
-	output = schema.SchemaFormat{ReferencesVal: s.References()}
-	for _, table := range s.Tables() {
-		tableFormat := schema.TableFormat{
-			NameVal:       table.Name(),
-			PrimaryKeyVal: table.PrimaryKey(),
-		}
-		for _, column := range table.Columns() {
-			tableFormat.ColumnsVal = append(tableFormat.ColumnsVal, schema.ColumnFormat{
-				NameVal: column.Name(),
-				TypeVal: column.Type(),
-			})
-		}
-
-		output.TablesVal = append(output.TablesVal, tableFormat)
-	}
-
-	return output, nil
+	return errors.Unreachable[cli.Runner]()
 }

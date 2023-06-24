@@ -2,6 +2,7 @@ package schema
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -61,7 +62,7 @@ func GoType(c schema.Column) reflect.Type {
 
 type Table struct {
 	NameVal       string
-	ColumnsVal    []schema.Column
+	ColumnsVal    []Column
 	PrimaryKeyVal []int
 }
 
@@ -70,7 +71,11 @@ func (t Table) Name() string {
 }
 
 func (t Table) Columns() []schema.Column {
-	return t.ColumnsVal
+	columns := []schema.Column{}
+	for _, column := range t.ColumnsVal {
+		columns = append(columns, column)
+	}
+	return columns
 }
 
 func (t Table) PrimaryKey() []int {
@@ -78,13 +83,21 @@ func (t Table) PrimaryKey() []int {
 }
 
 type Schema struct {
-	TablesVal     []schema.Table
+	TablesVal     []Table
 	ParentTables  []*int
 	ForeignTables [][]int
 }
 
+var _ schema.Schema = (*Schema)(nil)
+var _ json.Marshaler = (*Schema)(nil)
+var _ json.Unmarshaler = (*Schema)(nil)
+
 func (s *Schema) Tables() []schema.Table {
-	return s.TablesVal
+	var tables []schema.Table
+	for _, table := range s.TablesVal {
+		tables = append(tables, table)
+	}
+	return tables
 }
 
 func (s *Schema) References() [][]int {
@@ -96,6 +109,79 @@ func (s *Schema) References() [][]int {
 		}
 	}
 	return references
+}
+
+type TableJSON struct {
+	Name       string       `json:"name"`
+	Columns    []ColumnJSON `json:"columns"`
+	PrimaryKey []int        `json:"primary_key"`
+}
+type ColumnJSON struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+type SchemaJSON struct {
+	Tables        []TableJSON `json:"tables"`
+	References    [][]int     `json:"references"`
+	ParentTables  []*int      `json:"parent_tables"`
+	ForeignTables [][]int     `json:"foreign_tables"`
+}
+
+func (s *Schema) MarshalJSON() ([]byte, error) {
+	tables := []TableJSON{}
+	for _, table := range s.TablesVal {
+		columns := []ColumnJSON{}
+		for _, column := range table.ColumnsVal {
+			columns = append(columns, ColumnJSON{
+				Name: column.Name(),
+				Type: column.Type(),
+			})
+		}
+		tables = append(tables, TableJSON{
+			Name:       table.Name(),
+			Columns:    columns,
+			PrimaryKey: table.PrimaryKey(),
+		})
+	}
+	b, err := json.Marshal(SchemaJSON{
+		Tables:        tables,
+		References:    s.References(),
+		ParentTables:  s.ParentTables,
+		ForeignTables: s.ForeignTables,
+	})
+	if err != nil {
+		return nil, fmt.Errorf(`fail to marshal Schema to JSON: %w`, err)
+	}
+	return b, nil
+}
+
+func (s *Schema) UnmarshalJSON(b []byte) error {
+	var schemaJSON SchemaJSON
+	if err := json.Unmarshal(b, &schemaJSON); err != nil {
+		return fmt.Errorf(`fail to marshal Schema to JSON: %w`, err)
+	}
+
+	tables := []Table{}
+	for _, table := range schemaJSON.Tables {
+		columns := []Column{}
+		for _, column := range table.Columns {
+			columns = append(columns, Column{
+				NameVal: column.Name,
+				TypeVal: column.Type,
+			})
+		}
+		tables = append(tables, Table{
+			NameVal:       table.Name,
+			ColumnsVal:    columns,
+			PrimaryKeyVal: table.PrimaryKey,
+		})
+	}
+	*s = Schema{
+		TablesVal:     tables,
+		ParentTables:  schemaJSON.ParentTables,
+		ForeignTables: schemaJSON.ForeignTables,
+	}
+	return nil
 }
 
 type fetcher struct {
@@ -124,7 +210,7 @@ func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
 	}, nil
 }
 
-func (f *fetcher) getTables(ctx context.Context) ([]schema.Table, error) {
+func (f *fetcher) getTables(ctx context.Context) ([]Table, error) {
 	type tableColumnRow struct {
 		TableName       string
 		Columns         []string
@@ -180,16 +266,16 @@ ORDER BY c.TableName;
 		return nil, fmt.Errorf(`fail to get tables and columns: %w`, err)
 	}
 
-	tables := []schema.Table{}
+	tables := []Table{}
 	for _, row := range scannedRows {
-		table := &Table{
+		table := Table{
 			NameVal:       row.TableName,
-			ColumnsVal:    make([]schema.Column, len(row.Columns)),
+			ColumnsVal:    make([]Column, len(row.Columns)),
 			PrimaryKeyVal: make([]int, len(row.KeyColumns)),
 		}
 		columnPositions := map[string]int{}
 		for i, column := range row.Columns {
-			table.ColumnsVal[row.ColumnPositions[i]-1] = &Column{
+			table.ColumnsVal[row.ColumnPositions[i]-1] = Column{
 				NameVal: column,
 				TypeVal: row.ColumnTypes[i],
 			}
@@ -205,7 +291,7 @@ ORDER BY c.TableName;
 	return tables, nil
 }
 
-func (f *fetcher) getReferences(ctx context.Context, tables []schema.Table) ([]*int, [][]int, error) {
+func (f *fetcher) getReferences(ctx context.Context, tables []Table) ([]*int, [][]int, error) {
 	type referencedTableRow struct {
 		TableName         string
 		ParentTableName   *string

@@ -8,9 +8,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/Jumpaku/gotaface/cli"
-	dbschema_spanner "github.com/Jumpaku/gotaface/spanner/cli/dbschema"
-	dbschema_sqlite "github.com/Jumpaku/gotaface/sqlite/cli/dbschema"
+	"github.com/Jumpaku/gotaface/cli/dbschema"
 )
 
 //go:embed README.md
@@ -29,18 +27,7 @@ func main() {
 		log.Fatalln(`positional arguments <driver> and <data-source> are required`)
 	}
 
-	driver, dataSource := args[0], args[1]
-
-	var runner cli.Runner
-	switch driver {
-	default:
-		log.Fatalf(`unsupported driver %s`, driver)
-	case `spanner`:
-		runner = &dbschema_spanner.SpannerRunner{DataSource: dataSource}
-	case `sqlite3`:
-		runner = &dbschema_sqlite.SqliteRunner{DataSource: dataSource}
-	}
-
+	runner := dbschema.NewRunner(args[0], args[1])
 	ctx := context.Background()
 	err := runner.Run(ctx, os.Stdin, os.Stdout)
 	if err != nil {

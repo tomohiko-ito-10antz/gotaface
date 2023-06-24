@@ -36,9 +36,7 @@ func LoadDBInitInput(reader io.Reader) (DBInitInput, error) {
 type DeleteTablesOrdered [][]string
 type InsertTableRowsOrdered []map[string]dml.Rows
 
-func PrepareTableRows(ctx context.Context, schema schema.Schema, input DBInitInput) (DeleteTablesOrdered, InsertTableRowsOrdered, error) {
-	schemaTables := schema.Tables()
-	schemaReferences := schema.References()
+func PrepareTableRows(schema schema.Schema, input DBInitInput) (DeleteTablesOrdered, InsertTableRowsOrdered, error) {
 	tableIndex := map[string]int{}
 	for index, table := range schema.Tables() {
 		tableIndex[table.Name()] = index
@@ -48,17 +46,30 @@ func PrepareTableRows(ctx context.Context, schema schema.Schema, input DBInitInp
 			return nil, nil, fmt.Errorf(`table not found: %s`, initTable.Name)
 		}
 	}
-	order, cyclic := topological.Sort(schemaReferences)
+	order, cyclic := topological.Sort(schema.References())
 	if cyclic {
 		return nil, nil, fmt.Errorf(`tables having cyclic reference is not supported`)
 	}
 
+	targets := []string{}
+	for _, target := range input {
+		targets = append(targets, target.Name)
+	}
 	// collect target tables and referenced tables to be deleted
+	deleteTablesOrdered := collectDeleteTables(schema.Tables(), schema.References(), tableIndex, order, targets)
+
+	// collect target tables to be inserted
+	insertTableRowsOrdered := collectInsertTableRows(schema.Tables(), tableIndex, order, input)
+
+	return deleteTablesOrdered, insertTableRowsOrdered, nil
+}
+
+func collectDeleteTables(schemaTables []schema.Table, schemaReferences [][]int, tableIndex map[string]int, order []int, targets []string) DeleteTablesOrdered {
 	toBeDeleted := make([]bool, len(schemaTables))
 	visited := make([]bool, len(schemaTables))
 	children := topological.Transpose(schemaReferences)
-	for _, target := range input {
-		_ = topological.DFS(children, tableIndex[target.Name], func(v int) error {
+	for _, target := range targets {
+		_ = topological.DFS(children, tableIndex[target], func(v int) error {
 			if visited[v] {
 				return errors.New("Stop")
 			}
@@ -87,38 +98,39 @@ func PrepareTableRows(ctx context.Context, schema schema.Schema, input DBInitInp
 		}
 	}
 
-	// collect target tables to be inserted
+	return deleteTablesOrdered
+}
+func collectInsertTableRows(schemaTables []schema.Table, tableIndex map[string]int, order []int, input DBInitInput) InsertTableRowsOrdered {
 	insertTableRowsOrdered := InsertTableRowsOrdered{}
-	{
-		indices := make([][]int, len(input))
-		tableRows := map[string]dml.Rows{}
-		for _, toBeInserted := range input {
-			tableIndex := tableIndex[toBeInserted.Name]
-			indices[order[tableIndex]] = append(indices[order[tableIndex]], tableIndex)
 
-			rows := dml.Rows{}
-			for _, insertedRows := range toBeInserted.Rows {
-				row := dml.Row{}
-				for col, val := range insertedRows {
-					row[col] = val
-				}
-				rows = append(rows, row)
+	indices := make([][]int, len(input))
+	tableRows := map[string]dml.Rows{}
+	for _, toBeInserted := range input {
+		tableIndex := tableIndex[toBeInserted.Name]
+		indices[order[tableIndex]] = append(indices[order[tableIndex]], tableIndex)
+
+		rows := dml.Rows{}
+		for _, insertedRows := range toBeInserted.Rows {
+			row := dml.Row{}
+			for col, val := range insertedRows {
+				row[col] = val
 			}
-			tableRows[toBeInserted.Name] = rows
+			rows = append(rows, row)
 		}
-		for _, indices := range indices {
-			if len(indices) == 0 {
-				continue
-			}
-			tables := map[string]dml.Rows{}
-			for _, index := range indices {
-				tables[schemaTables[index].Name()] = tableRows[schemaTables[index].Name()]
-			}
-			insertTableRowsOrdered = append(insertTableRowsOrdered, tables)
+		tableRows[toBeInserted.Name] = rows
+	}
+	for _, indices := range indices {
+		if len(indices) == 0 {
+			continue
 		}
+		tables := map[string]dml.Rows{}
+		for _, index := range indices {
+			tables[schemaTables[index].Name()] = tableRows[schemaTables[index].Name()]
+		}
+		insertTableRowsOrdered = append(insertTableRowsOrdered, tables)
 	}
 
-	return deleteTablesOrdered, insertTableRowsOrdered, nil
+	return insertTableRowsOrdered
 }
 
 func DeleteRowsInParallel(ctx context.Context, deleter delete.Deleter, tables DeleteTablesOrdered) error {

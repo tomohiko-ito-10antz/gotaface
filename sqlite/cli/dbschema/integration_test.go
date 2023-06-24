@@ -9,13 +9,13 @@ import (
 	"testing"
 	"time"
 
-	json_schema "github.com/Jumpaku/gotaface/ddl/schema"
 	"github.com/Jumpaku/gotaface/sqlite/cli/dbschema"
+	"github.com/Jumpaku/gotaface/sqlite/ddl/schema"
 	"github.com/Jumpaku/gotaface/sqlite/test"
 	"golang.org/x/exp/slices"
 )
 
-func TestRunner_Run_Sqlite(t *testing.T) {
+func TestRunner_Run_SQLite(t *testing.T) {
 	sqliteTestDir := os.Getenv(test.EnvSqliteTestDir)
 	if sqliteTestDir == "" {
 		t.Skipf(`skipped because environment variable %s is not set`, test.EnvSqliteTestDir)
@@ -74,86 +74,86 @@ CREATE TABLE t6 (
 	in := bytes.NewBuffer(nil)
 	out := bytes.NewBuffer(nil)
 
-	sut := dbschema.SqliteRunner{DataSource: dataSource}
+	sut := dbschema.SQLiteRunner{DataSource: dataSource}
 
 	err := sut.Run(context.Background(), in, out)
 	if err != nil {
 		t.Errorf(`fail to run: %v`, err)
 	}
-	var got json_schema.SchemaFormat
+	var got schema.SchemaJSON
 	json.Unmarshal(out.Bytes(), &got)
 
-	want := json_schema.SchemaFormat{
-		TablesVal: []json_schema.TableFormat{
+	want := schema.SchemaJSON{
+		Tables: []schema.TableJSON{
 			{
-				NameVal: "t0",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT"},
-					{NameVal: "id2", TypeVal: "INT"},
-					{NameVal: "col_integer", TypeVal: "INTEGER"},
-					{NameVal: "col_text", TypeVal: "TEXT"},
-					{NameVal: "col_real", TypeVal: "REAL"},
-					{NameVal: "col_blob", TypeVal: "BLOB"},
+				Name: "t0",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT"},
+					{Name: "id2", Type: "INT"},
+					{Name: "col_integer", Type: "INTEGER"},
+					{Name: "col_text", Type: "TEXT"},
+					{Name: "col_real", Type: "REAL"},
+					{Name: "col_blob", Type: "BLOB"},
 				},
-				PrimaryKeyVal: []int{0, 1},
+				PrimaryKey: []int{0, 1},
 			}, {
-				NameVal: "t1",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id", TypeVal: "INT"},
+				Name: "t1",
+				Columns: []schema.ColumnJSON{
+					{Name: "id", Type: "INT"},
 				},
-				PrimaryKeyVal: []int{0},
+				PrimaryKey: []int{0},
 			}, {
-				NameVal: "t2",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id", TypeVal: "INT"},
+				Name: "t2",
+				Columns: []schema.ColumnJSON{
+					{Name: "id", Type: "INT"},
 				},
-				PrimaryKeyVal: []int{0},
+				PrimaryKey: []int{0},
 			}, {
-				NameVal: "t3",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id", TypeVal: "INT"},
-					{NameVal: "col1", TypeVal: "INT"},
-					{NameVal: "col2", TypeVal: "INT"},
+				Name: "t3",
+				Columns: []schema.ColumnJSON{
+					{Name: "id", Type: "INT"},
+					{Name: "col1", Type: "INT"},
+					{Name: "col2", Type: "INT"},
 				},
-				PrimaryKeyVal: []int{0},
+				PrimaryKey: []int{0},
 			}, {
-				NameVal: "t4",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id", TypeVal: "INT"},
+				Name: "t4",
+				Columns: []schema.ColumnJSON{
+					{Name: "id", Type: "INT"},
 				},
-				PrimaryKeyVal: []int{0},
+				PrimaryKey: []int{0},
 			}, {
-				NameVal: "t5",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT"},
-					{NameVal: "id2", TypeVal: "INT"},
+				Name: "t5",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT"},
+					{Name: "id2", Type: "INT"},
 				},
-				PrimaryKeyVal: []int{0, 1},
+				PrimaryKey: []int{0, 1},
 			}, {
-				NameVal: "t6",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT"},
-					{NameVal: "id2", TypeVal: "INT"},
-					{NameVal: "id3", TypeVal: "INT"},
+				Name: "t6",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT"},
+					{Name: "id2", Type: "INT"},
+					{Name: "id3", Type: "INT"},
 				},
-				PrimaryKeyVal: []int{0, 1, 2},
+				PrimaryKey: []int{0, 1, 2},
 			},
 		},
-		ReferencesVal: [][]int{{}, {0}, {0}, {1, 2}, {}, {4}, {5}},
+		References: [][]int{{}, {0}, {0}, {1, 2}, {}, {4}, {5}},
 	}
 
-	for i, want := range want.TablesVal {
-		got := got.TablesVal[i]
+	for i, want := range want.Tables {
+		got := got.Tables[i]
 
-		equals := got.NameVal == want.NameVal &&
-			slices.Equal(got.ColumnsVal, want.ColumnsVal) &&
-			slices.Equal(got.PrimaryKeyVal, want.PrimaryKeyVal)
+		equals := got.Name == want.Name &&
+			slices.Equal(got.Columns, want.Columns) &&
+			slices.Equal(got.PrimaryKey, want.PrimaryKey)
 
 		if !equals {
 			t.Errorf("table %d not match\n  got  = %v\n  want = %v", i, got, want)
 		}
 	}
-	if !slices.EqualFunc(got.ReferencesVal, want.ReferencesVal, func(got, want []int) bool { return slices.Equal(got, want) }) {
+	if !slices.EqualFunc(got.References, want.References, func(got, want []int) bool { return slices.Equal(got, want) }) {
 		t.Errorf("references not match\n  got  = %v\n  want = %v", got, want)
 	}
 }

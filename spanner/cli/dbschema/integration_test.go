@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	json_schema "github.com/Jumpaku/gotaface/ddl/schema"
 	"github.com/Jumpaku/gotaface/spanner/cli/dbschema"
+	"github.com/Jumpaku/gotaface/spanner/ddl/schema"
 	"github.com/Jumpaku/gotaface/spanner/test"
 	"golang.org/x/exp/slices"
 )
@@ -98,113 +98,116 @@ CREATE TABLE t9 (
 	if err != nil {
 		t.Errorf(`fail to run: %v`, err)
 	}
-	var got json_schema.SchemaFormat
+	var got schema.SchemaJSON
 	json.Unmarshal(out.Bytes(), &got)
 
-	want := json_schema.SchemaFormat{
-		TablesVal: []json_schema.TableFormat{
+	want := schema.SchemaJSON{
+		Tables: []schema.TableJSON{
 			{
-				NameVal: "t0",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT64"},
-					{NameVal: "id2", TypeVal: "INT64"},
-					{NameVal: "col_integer", TypeVal: "INT64"},
-					{NameVal: "col_string", TypeVal: "STRING(MAX)"},
-					{NameVal: "col_float", TypeVal: "FLOAT64"},
-					{NameVal: "col_bytes", TypeVal: "BYTES(16)"},
-					{NameVal: "col_bool", TypeVal: "BOOL"},
-					{NameVal: "col_date", TypeVal: "DATE"},
-					{NameVal: "col_timestamp", TypeVal: "TIMESTAMP"},
+				Name: "t0",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT64"},
+					{Name: "id2", Type: "INT64"},
+					{Name: "col_integer", Type: "INT64"},
+					{Name: "col_string", Type: "STRING(MAX)"},
+					{Name: "col_float", Type: "FLOAT64"},
+					{Name: "col_bytes", Type: "BYTES(16)"},
+					{Name: "col_bool", Type: "BOOL"},
+					{Name: "col_date", Type: "DATE"},
+					{Name: "col_timestamp", Type: "TIMESTAMP"},
 				},
-				PrimaryKeyVal: []int{0, 1},
+				PrimaryKey: []int{0, 1},
 			},
 			{
-				NameVal: "t1",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id", TypeVal: "INT64"},
+				Name: "t1",
+				Columns: []schema.ColumnJSON{
+					{Name: "id", Type: "INT64"},
 				},
-				PrimaryKeyVal: []int{0},
+				PrimaryKey: []int{0},
 			},
 			{
-				NameVal: "t2",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id", TypeVal: "INT64"},
+				Name: "t2",
+				Columns: []schema.ColumnJSON{
+					{Name: "id", Type: "INT64"},
 				},
-				PrimaryKeyVal: []int{0},
+				PrimaryKey: []int{0},
 			},
 			{
-				NameVal: "t3",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id", TypeVal: "INT64"},
-					{NameVal: "col1", TypeVal: "INT64"},
-					{NameVal: "col2", TypeVal: "INT64"},
+				Name: "t3",
+				Columns: []schema.ColumnJSON{
+					{Name: "id", Type: "INT64"},
+					{Name: "col1", Type: "INT64"},
+					{Name: "col2", Type: "INT64"},
 				},
-				PrimaryKeyVal: []int{0},
+				PrimaryKey: []int{0},
 			},
 			{
-				NameVal: "t4",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT64"},
+				Name: "t4",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT64"},
 				},
-				PrimaryKeyVal: []int{0},
+				PrimaryKey: []int{0},
 			},
 			{
-				NameVal: "t5",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT64"},
-					{NameVal: "id2", TypeVal: "INT64"},
+				Name: "t5",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT64"},
+					{Name: "id2", Type: "INT64"},
 				},
-				PrimaryKeyVal: []int{0, 1},
+				PrimaryKey: []int{0, 1},
 			},
 			{
-				NameVal: "t6",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT64"},
-					{NameVal: "id2", TypeVal: "INT64"},
-					{NameVal: "id3", TypeVal: "INT64"},
+				Name: "t6",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT64"},
+					{Name: "id2", Type: "INT64"},
+					{Name: "id3", Type: "INT64"},
 				},
-				PrimaryKeyVal: []int{0, 1, 2},
+				PrimaryKey: []int{0, 1, 2},
 			},
 			{
-				NameVal: "t7",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT64"},
+				Name: "t7",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT64"},
 				},
-				PrimaryKeyVal: []int{0},
+				PrimaryKey: []int{0},
 			},
 			{
-				NameVal: "t8",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT64"},
-					{NameVal: "id2", TypeVal: "INT64"},
+				Name: "t8",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT64"},
+					{Name: "id2", Type: "INT64"},
 				},
-				PrimaryKeyVal: []int{0, 1},
+				PrimaryKey: []int{0, 1},
 			},
 			{
-				NameVal: "t9",
-				ColumnsVal: []json_schema.ColumnFormat{
-					{NameVal: "id1", TypeVal: "INT64"},
-					{NameVal: "id2", TypeVal: "INT64"},
-					{NameVal: "id3", TypeVal: "INT64"},
+				Name: "t9",
+				Columns: []schema.ColumnJSON{
+					{Name: "id1", Type: "INT64"},
+					{Name: "id2", Type: "INT64"},
+					{Name: "id3", Type: "INT64"},
 				},
-				PrimaryKeyVal: []int{0, 1, 2},
+				PrimaryKey: []int{0, 1, 2},
 			},
 		},
-		ReferencesVal: [][]int{{}, {0}, {0}, {1, 2}, {}, {4}, {5}, {}, {7}, {8}},
+		References: [][]int{{}, {0}, {0}, {1, 2}, {}, {4}, {5}, {}, {7}, {8}},
 	}
 
-	for i, want := range want.TablesVal {
-		got := got.TablesVal[i]
+	if len(got.Tables) != len(want.Tables) {
+		t.Errorf("len(got.Tables()) != len(want.TablesVal)\n  got  = %v\n  want = %v", got, want)
+	}
+	for i, want := range want.Tables {
+		got := got.Tables[i]
 
-		equals := got.NameVal == want.NameVal &&
-			slices.Equal(got.ColumnsVal, want.ColumnsVal) &&
-			slices.Equal(got.PrimaryKeyVal, want.PrimaryKeyVal)
+		equals := got.Name == want.Name &&
+			slices.Equal(got.Columns, want.Columns) &&
+			slices.Equal(got.PrimaryKey, want.PrimaryKey)
 
 		if !equals {
 			t.Errorf("table %d not match\n  got  = %v\n  want = %v", i, got, want)
 		}
 	}
-	if !slices.EqualFunc(got.ReferencesVal, want.ReferencesVal, func(got, want []int) bool { return slices.Equal(got, want) }) {
+	if !slices.EqualFunc(got.References, want.References, func(got, want []int) bool { return slices.Equal(got, want) }) {
 		t.Errorf("references not match\n  got  = %v\n  want = %v", got, want)
 	}
 }
