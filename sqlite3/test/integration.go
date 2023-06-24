@@ -29,13 +29,13 @@ func Setup(t *testing.T, dbPath string) (interface {
 
 	db, err := sql.Open("sqlite3", dataSource)
 	if err != nil {
-		t.Fatalf(`fail to open sqlite DB: %v`, err)
+		t.Fatalf(`fail to open sqlite3 DB: %v`, err)
 	}
 
 	if dbPath == "" {
 		conn, err := db.Conn(context.Background())
 		if err != nil {
-			t.Fatalf(`fail to get sqlite connection: %v`, err)
+			t.Fatalf(`fail to get sqlite3 connection: %v`, err)
 		}
 		tearDown := func() {
 			conn.Close()

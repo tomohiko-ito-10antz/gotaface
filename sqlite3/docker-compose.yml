@@ -8,8 +8,8 @@ services:
       dockerfile: Dockerfile
       target: work-base
     working_dir: /work
-    command: [ "go", "test", "./sqlite/..." ]
+    command: [ "go", "test", "./sqlite3/..." ]
     volumes:
       - ../:/work/
     environment:
-      - GOTAFACE_TEST_SQLITE_SCHEMA_DB_DIR=/work/sqlite/schema
+      - GOTAFACE_TEST_SQLITE_SCHEMA_DB_DIR=/work/sqlite3/schema

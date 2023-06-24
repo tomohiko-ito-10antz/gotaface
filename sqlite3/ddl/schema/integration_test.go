@@ -7,8 +7,8 @@ import (
 	"github.com/davecgh/go-spew/spew"
 
 	"github.com/Jumpaku/gotaface/ddl/schema"
-	schema_impl "github.com/Jumpaku/gotaface/sqlite/ddl/schema"
-	"github.com/Jumpaku/gotaface/sqlite/test"
+	schema_impl "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
+	"github.com/Jumpaku/gotaface/sqlite3/test"
 
 	"golang.org/x/exp/slices"
 )

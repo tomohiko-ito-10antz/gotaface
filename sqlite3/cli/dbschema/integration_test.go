@@ -1,7 +1,6 @@
 package dbschema_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jumpaku/gotaface/sqlite/cli/dbschema"
-	"github.com/Jumpaku/gotaface/sqlite/ddl/schema"
-	"github.com/Jumpaku/gotaface/sqlite/test"
+	"github.com/Jumpaku/gotaface/sqlite3/cli/dbschema"
+	"github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
+	"github.com/Jumpaku/gotaface/sqlite3/test"
 	"golang.org/x/exp/slices"
 )
 
@@ -71,17 +70,17 @@ CREATE TABLE t6 (
 	FOREIGN KEY (id1, id2) REFERENCES t5 (id1, id2));
 `}})
 
-	in := bytes.NewBuffer(nil)
-	out := bytes.NewBuffer(nil)
-
-	sut := dbschema.SQLiteRunner{DataSource: dataSource}
-
-	err := sut.Run(context.Background(), in, out)
+	out, err := dbschema.DBSchemaFunc(context.Background(), "sqlite3", dataSource)
 	if err != nil {
 		t.Errorf(`fail to run: %v`, err)
 	}
+	b, err := out.MarshalJSON()
+	if err != nil {
+		t.Errorf(`fail to marshal to JSON: %v`, err)
+	}
+
 	var got schema.SchemaJSON
-	json.Unmarshal(out.Bytes(), &got)
+	json.Unmarshal(b, &got)
 
 	want := schema.SchemaJSON{
 		Tables: []schema.TableJSON{

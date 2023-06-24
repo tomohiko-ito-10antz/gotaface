@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Jumpaku/gotaface/sqlite/ddl/schema"
+	"github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
 )
 
 func TestGoType(t *testing.T) {

@@ -56,15 +56,15 @@ func PrepareTableRows(schema schema.Schema, input DBInitInput) (DeleteTablesOrde
 		targets = append(targets, target.Name)
 	}
 	// collect target tables and referenced tables to be deleted
-	deleteTablesOrdered := collectDeleteTables(schema.Tables(), schema.References(), tableIndex, order, targets)
+	deleteTablesOrdered := CollectDeleteTables(schema.Tables(), schema.References(), tableIndex, order, targets)
 
 	// collect target tables to be inserted
-	insertTableRowsOrdered := collectInsertTableRows(schema.Tables(), tableIndex, order, input)
+	insertTableRowsOrdered := CollectInsertTableRows(schema.Tables(), tableIndex, order, input)
 
 	return deleteTablesOrdered, insertTableRowsOrdered, nil
 }
 
-func collectDeleteTables(schemaTables []schema.Table, schemaReferences [][]int, tableIndex map[string]int, order []int, targets []string) DeleteTablesOrdered {
+func CollectDeleteTables(schemaTables []schema.Table, schemaReferences [][]int, tableIndex map[string]int, order []int, targets []string) DeleteTablesOrdered {
 	toBeDeleted := make([]bool, len(schemaTables))
 	visited := make([]bool, len(schemaTables))
 	children := topological.Transpose(schemaReferences)
@@ -100,7 +100,7 @@ func collectDeleteTables(schemaTables []schema.Table, schemaReferences [][]int, 
 
 	return deleteTablesOrdered
 }
-func collectInsertTableRows(schemaTables []schema.Table, tableIndex map[string]int, order []int, input DBInitInput) InsertTableRowsOrdered {
+func CollectInsertTableRows(schemaTables []schema.Table, tableIndex map[string]int, order []int, input DBInitInput) InsertTableRowsOrdered {
 	insertTableRowsOrdered := InsertTableRowsOrdered{}
 
 	indices := make([][]int, len(input))

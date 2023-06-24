@@ -1,7 +1,6 @@
 package dbschema_test
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -89,17 +88,16 @@ CREATE TABLE t9 (
 ) PRIMARY KEY (id1, id2, id3),
 	INTERLEAVE IN PARENT t8`})
 
-	in := bytes.NewBuffer(nil)
-	out := bytes.NewBuffer(nil)
-
-	sut := dbschema.SpannerRunner{DataSource: fullDatabase}
-
-	err := sut.Run(context.Background(), in, out)
+	out, err := dbschema.DBSchemaFunc(context.Background(), "spanner", fullDatabase)
+	if err != nil {
+		t.Errorf(`fail to run: %v`, err)
+	}
+	b, err := out.MarshalJSON()
 	if err != nil {
 		t.Errorf(`fail to run: %v`, err)
 	}
 	var got schema.SchemaJSON
-	json.Unmarshal(out.Bytes(), &got)
+	json.Unmarshal(b, &got)
 
 	want := schema.SchemaJSON{
 		Tables: []schema.TableJSON{

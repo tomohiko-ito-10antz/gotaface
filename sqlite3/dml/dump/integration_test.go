@@ -1,4 +1,4 @@
-package insert_test
+package dump_test
 
 import (
 	"context"
@@ -7,8 +7,9 @@ import (
 	"testing"
 
 	"github.com/Jumpaku/gotaface/dml"
-	"github.com/Jumpaku/gotaface/sqlite/dml/insert"
-	"github.com/Jumpaku/gotaface/sqlite/test"
+	schema_impl "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
+	"github.com/Jumpaku/gotaface/sqlite3/dml/dump"
+	"github.com/Jumpaku/gotaface/sqlite3/test"
 	"golang.org/x/exp/slices"
 )
 
@@ -16,11 +17,13 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestInserter_Insert(t *testing.T) {
+func TestDumper_Dump(t *testing.T) {
+
 	db, tearDown := test.Setup(t, "")
 	defer tearDown()
 
-	test.Init(t, db, []test.Statement{{SQL: `
+	test.Init(t, db, []test.Statement{{
+		SQL: `
 CREATE TABLE t (
 	id2 INT,
 	id1 INT,
@@ -29,8 +32,30 @@ CREATE TABLE t (
 	col_real REAL,
 	col_blob BLOB,
 	PRIMARY KEY (id1, id2));
-`}})
-	input := dml.Rows{
+
+INSERT INTO t (id1, id2, col_integer, col_text, col_real, col_blob)
+VALUES
+	(1, 2, 4, "abc", 1.25, X'313234616263'),
+	(2, 2, 3, "def", 1.50, X'323233646566'),
+	(1, 1, 2, "ghi", 1.75, X'313132676869'),
+	(2, 1, 1, "jkl", 2.00, X'3231316a6b6c');
+`},
+	})
+
+	ctx := context.Background()
+	schema, err := schema_impl.NewFetcher(db).Fetch(ctx)
+	if err != nil {
+		t.Fatalf("fail to fetch schema: %v", err)
+	}
+
+	sut := dump.NewDumper(db, schema)
+
+	got, err := sut.Dump(ctx, `t`)
+	if err != nil {
+		tearDown()
+		t.Errorf("fail to dump table: %v", err)
+	}
+	want := dml.Rows{
 		{
 			`id1`:         sql.NullInt64{Valid: true, Int64: 1},
 			`id2`:         sql.NullInt64{Valid: true, Int64: 1},
@@ -62,47 +87,29 @@ CREATE TABLE t (
 		},
 	}
 
-	ctx := context.Background()
-
-	sut := insert.NewInserter(db)
-
-	err := sut.Insert(ctx, `t`, input)
-	if err != nil {
-		t.Errorf("fail to insert rows: %v", err)
+	if len(got) != len(want) {
+		t.Errorf("table count not match\n  len(got) = %v\n  len(want) = %v", len(got), len(want))
 	}
 
-	for i, inputRow := range input {
-		type Row struct {
-			Id1         sql.NullInt64
-			Id2         sql.NullInt64
-			Col_integer sql.NullInt64
-			Col_text    sql.NullString
-			Col_real    sql.NullFloat64
-			Col_blob    []byte
+	for i, want := range want {
+		got := got[i]
+		for key, want := range want {
+			got, ok := got[key]
+			if !ok {
+				t.Errorf("i = %d: gotVal does not have key %s", i, key)
+			}
+			if !equals(got, want) {
+				t.Errorf("i = %d, key = %s: got != want\n  gotVal  = %#v\n  wantVal = %#v", i, key, got, want)
+			}
 		}
-		found := test.FindRow[Row](t, db, `t`, map[string]any{"id1": inputRow["id1"].(sql.NullInt64).Int64, "id2": inputRow["id2"].(sql.NullInt64).Int64})
-		if found == nil {
-			t.Errorf("row not found")
-		}
+	}
+}
 
-		want := Row{
-			Id1:         inputRow["id1"].(sql.NullInt64),
-			Id2:         inputRow["id2"].(sql.NullInt64),
-			Col_integer: inputRow["col_integer"].(sql.NullInt64),
-			Col_text:    inputRow["col_text"].(sql.NullString),
-			Col_real:    inputRow["col_real"].(sql.NullFloat64),
-			Col_blob:    inputRow["col_blob"].([]byte),
-		}
-
-		equals := true
-		equals = equals && found.Id1 == want.Id1
-		equals = equals && found.Id2 == want.Id2
-		equals = equals && found.Col_integer == want.Col_integer
-		equals = equals && found.Col_text == want.Col_text
-		equals = equals && found.Col_real == want.Col_real
-		equals = equals && slices.Equal(found.Col_blob, want.Col_blob)
-		if !equals {
-			t.Errorf("i = %d, id1\n found = %#v\n   want = %#v", i, found, want)
-		}
+func equals(got any, want any) bool {
+	switch want := want.(type) {
+	default:
+		return got == want
+	case []byte:
+		return slices.Equal(got.([]byte), want)
 	}
 }

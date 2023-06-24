@@ -9,7 +9,7 @@ import (
 	"github.com/Jumpaku/gotaface/ddl/schema"
 	"github.com/Jumpaku/gotaface/dml"
 	"github.com/Jumpaku/gotaface/dml/dump"
-	schema_impl "github.com/Jumpaku/gotaface/sqlite/ddl/schema"
+	schema_impl "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
 	"golang.org/x/exp/slices"
 )
 
