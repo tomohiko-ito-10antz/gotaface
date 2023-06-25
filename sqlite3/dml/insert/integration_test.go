@@ -17,7 +17,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestInserter_Insert(t *testing.T) {
-	db, tearDown := test.Setup(t, "")
+	db, tearDown := test.Setup(t, "", "")
 	defer tearDown()
 
 	test.Init(t, db, []test.Statement{{SQL: `

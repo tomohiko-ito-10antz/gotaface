@@ -68,19 +68,21 @@ func ScanRows(rows *sql.Rows, scanTypes ScanRowTypes) ([]ScanRowValue, error) {
 		lowerColumns[i] = strings.ToLower(column)
 	}
 
-	lowerColumnScanType := ScanRowTypes{}
+	lowerScanTypes := ScanRowTypes{}
 	for column, scanType := range scanTypes {
-		lowerColumnScanType[strings.ToLower(column)] = scanType
+		lowerScanTypes[strings.ToLower(column)] = scanType
 	}
 
 	rowValues := []ScanRowValue{}
 	for rows.Next() {
 		pointers := make([]any, len(lowerColumns))
-		for i, column := range lowerColumns {
-			scanType, ok := lowerColumnScanType[lowerColumns[i]]
+		lowerColumnIndices := map[string]int{}
+		for i, lowerColumn := range lowerColumns {
+			scanType, ok := lowerScanTypes[lowerColumn]
 			if !ok {
-				return nil, fmt.Errorf("fail to scan row Any %s", column)
+				scanType = reflect.TypeOf(sql.RawBytes{})
 			}
+			lowerColumnIndices[lowerColumn] = i
 
 			pointers[i] = reflect.New(scanType).Interface()
 		}
@@ -90,9 +92,10 @@ func ScanRows(rows *sql.Rows, scanTypes ScanRowTypes) ([]ScanRowValue, error) {
 			return nil, fmt.Errorf("fail to scan row values: %w", err)
 		}
 
-		rowValue := map[string]any{}
-		for i, column := range lowerColumns {
-			rowValue[column] = reflect.ValueOf(pointers[i]).Elem().Interface()
+		rowValue := ScanRowValue{}
+		for column := range scanTypes {
+			idx := lowerColumnIndices[strings.ToLower(column)]
+			rowValue[column] = reflect.ValueOf(pointers[idx]).Elem().Interface()
 		}
 
 		rowValues = append(rowValues, rowValue)

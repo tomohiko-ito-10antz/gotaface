@@ -14,7 +14,7 @@ import (
 )
 
 func TestFetcher_Fetch(t *testing.T) {
-	db, tearDown := test.Setup(t, "")
+	db, tearDown := test.Setup(t, "", "")
 	defer tearDown()
 
 	ctx := context.Background()

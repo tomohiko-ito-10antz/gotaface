@@ -21,7 +21,7 @@ func TestRunner_Run_SQLite(t *testing.T) {
 	}
 
 	dataSource := fmt.Sprintf(`%s/cli_dbschema_%d.db`, sqliteTestDir, time.Now().UnixNano())
-	db, tearDown := test.Setup(t, dataSource)
+	db, tearDown := test.Setup(t, dataSource, "")
 	defer tearDown()
 
 	test.Init(t, db, []test.Statement{{SQL: `

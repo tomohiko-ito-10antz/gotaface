@@ -16,15 +16,20 @@ type Statement struct {
 	Params []any
 }
 
-func Setup(t *testing.T, dbPath string) (interface {
+func Setup(t *testing.T, dbPath string, queryParams string) (interface {
 	dbsql.Execer
 	dbsql.Queryer
 }, func()) {
 	t.Helper()
 
+	if dbPath == "" {
+		dbPath = ":memory:"
+	}
+
 	dataSource := dbPath
-	if dataSource == "" {
-		dataSource = ":memory:"
+	if queryParams != "" {
+		dataSource += `?` + queryParams
+
 	}
 
 	db, err := sql.Open("sqlite3", dataSource)
@@ -58,7 +63,7 @@ func Init(t *testing.T, execer dbsql.Execer, stmts []Statement) {
 	for i, stmt := range stmts {
 		_, err := execer.ExecContext(context.Background(), stmt.SQL, stmt.Params...)
 		if err != nil {
-			t.Fatalf(`fail to execute ddl %d: %v`, i, err)
+			t.Fatalf(`fail to execute statement %d: %v`, i, err)
 		}
 	}
 }

@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 
 func TestDeleter_Clear(t *testing.T) {
 
-	db, tearDown := test.Setup(t, "")
+	db, tearDown := test.Setup(t, "", "")
 	defer tearDown()
 
 	ctx := context.Background()

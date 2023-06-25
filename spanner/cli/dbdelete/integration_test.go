@@ -80,7 +80,7 @@ var testDMLs = []spanner.Statement{
 	{SQL: `INSERT INTO t0 (id1, id2) VALUES (0, 0)`},
 	{SQL: `INSERT INTO t1 (id) VALUES (0)`},
 	{SQL: `INSERT INTO t2 (id) VALUES (0)`},
-	{SQL: `INSERT INTO t3 (id) VALUES (3)`},
+	{SQL: `INSERT INTO t3 (id, col1, col2) VALUES (3, 0, 0)`},
 	{SQL: `INSERT INTO t4 (id1) VALUES (4)`},
 	{SQL: `INSERT INTO t5 (id1, id2) VALUES (4, 5)`},
 	{SQL: `INSERT INTO t6 (id1, id2, id3) VALUES (4, 5, 6)`},
