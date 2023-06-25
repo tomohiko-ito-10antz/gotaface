@@ -13,7 +13,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func TestRunner_Run_Spanner(t *testing.T) {
+func TestDBSchemaFunc(t *testing.T) {
 	test.SkipIfNoEnv(t)
 
 	env := test.GetEnvSpanner()
@@ -94,7 +94,7 @@ CREATE TABLE t9 (
 	}
 	b, err := out.MarshalJSON()
 	if err != nil {
-		t.Errorf(`fail to run: %v`, err)
+		t.Errorf(`fail to marshal: %v`, err)
 	}
 	var got schema.SchemaJSON
 	json.Unmarshal(b, &got)

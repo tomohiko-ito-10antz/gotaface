@@ -19,7 +19,7 @@ To use gf-dbdelete with Spanner, specify `spanner` as the `<driver>` and provide
 To use gf-dbdelete with SQLite3, set `sqlite3` as the `<driver>` and provide a connection string as the `<data-source>`.
 The connection string should follow the format described in [https://github.com/mattn/go-sqlite3#connection-string](https://github.com/mattn/go-sqlite3#connection-string), such as `file:test.db?cache=shared&mode=memory`.
 
-gf-dbdelete fetches schema information to prepare for the deletion. To provide specific JSON-based schema file, specify the path `<schema-json>` of the file using `-schema` option. The file specified by this option must match the structure described in the Output section in README.md of [dbschema](../dbschema/README.md).
+`gf-dbdelete` fetches schema information to prepare for the deletion and saves the information to a cache file. If the cache file already exists then `gf-dbdelete` uses tht file instead of  fetching the schema information again. To specify the cache file, specify a path of the file as `<schema-json>` using the `-schema` option. The format of the cache file should follow the JSON format described in the Output section in the README.md file of [dbschema](../dbschema/README.md). The default value for `<schema-json>` is `.gf-schema.json`.
 
 ## Input
 

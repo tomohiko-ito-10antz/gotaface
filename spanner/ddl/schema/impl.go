@@ -1,6 +1,7 @@
 package schema
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -157,7 +158,10 @@ func (s *Schema) MarshalJSON() ([]byte, error) {
 
 func (s *Schema) UnmarshalJSON(b []byte) error {
 	var schemaJSON SchemaJSON
-	if err := json.Unmarshal(b, &schemaJSON); err != nil {
+	d := json.NewDecoder(bytes.NewBuffer(b))
+	d.UseNumber()
+	d.DisallowUnknownFields()
+	if err := d.Decode(&schemaJSON); err != nil {
 		return fmt.Errorf(`fail to marshal Schema to JSON: %w`, err)
 	}
 
