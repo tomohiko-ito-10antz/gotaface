@@ -12,6 +12,7 @@ import (
 	"os"
 
 	dbdelete_spanner "github.com/Jumpaku/gotaface/spanner/cli/dbdelete"
+	dbdelete_sqlite3 "github.com/Jumpaku/gotaface/sqlite3/cli/dbdelete"
 
 	_ "embed"
 )
@@ -22,7 +23,6 @@ var Usage string
 func main() {
 	cmd := flag.NewFlagSet("gf-dbdelete", flag.ExitOnError)
 	cmd.Usage = func() { fmt.Println(Usage) }
-	schemaJSON := cmd.String(`schema`, ".gf-schema.json", "specifies a path <schema-json> of a JSON-based schema file")
 
 	if err := cmd.Parse(os.Args[1:]); err != nil {
 		log.Fatalf(`cannot parse command line arguments: %v`, err)
@@ -33,14 +33,14 @@ func main() {
 		log.Fatalln(`positional arguments <driver> and <data-source> are required`)
 	}
 
-	err := Runner{driver: args[0], dataSource: args[1], schemaJSON: *schemaJSON}.Run(context.Background(), os.Stdin, os.Stdout)
+	err := Runner{driver: args[0], dataSource: args[1]}.Run(context.Background(), os.Stdin, os.Stdout)
 	if err != nil {
 		log.Fatalf(`failed execution: %v`, err)
 	}
 }
 
 type DBDeleteInput = []string
-type DBDeleteFunc func(ctx context.Context, driver string, dataSource string, schemaReader io.Reader, schemaWriter io.Writer, input DBDeleteInput) error
+type DBDeleteFunc func(ctx context.Context, driver string, dataSource string, input DBDeleteInput) error
 
 type Runner struct {
 	driver     string
@@ -79,7 +79,7 @@ func (runner Runner) Run(ctx context.Context, stdin io.Reader, stdout io.Writer)
 	case `spanner`:
 		dbDeleteFunc = dbdelete_spanner.DBDeleteFunc
 	case `sqlite3`:
-		//	dbDeleteFunc = dbdelete_sqlite.DBDeleteFunc
+		dbDeleteFunc = dbdelete_sqlite3.DBDeleteFunc
 	}
 
 	var input DBDeleteInput
@@ -89,17 +89,7 @@ func (runner Runner) Run(ctx context.Context, stdin io.Reader, stdout io.Writer)
 		return fmt.Errorf(`fail to decode JSON from stdin`)
 	}
 
-	schemaReader, err := LoadSchemaJSON(runner.schemaJSON)
-	if err := d.Decode(&input); err != nil {
-		return fmt.Errorf(`fail to load schema from %s`, runner.schemaJSON)
-	}
-
-	schemaWriter, err := os.OpenFile(runner.schemaJSON, os.O_CREATE, 066)
-	if err := d.Decode(&input); err != nil {
-		return fmt.Errorf(`fail to load schema from %s`, runner.schemaJSON)
-	}
-	defer schemaWriter.Close()
-	err = dbDeleteFunc(ctx, runner.driver, runner.dataSource, schemaReader, schemaWriter, input)
+	err := dbDeleteFunc(ctx, runner.driver, runner.dataSource, input)
 	if err != nil {
 		return fmt.Errorf(`fail to execute dbdelete`)
 	}

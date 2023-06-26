@@ -1,20 +1,14 @@
 package dbdelete_test
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/spanner"
 	"github.com/Jumpaku/gotaface/spanner/cli/dbdelete"
-	"github.com/Jumpaku/gotaface/spanner/ddl/schema"
 	"github.com/Jumpaku/gotaface/spanner/test"
-	"github.com/davecgh/go-spew/spew"
-	"golang.org/x/exp/slices"
 )
 
 var testDDLs = []string{`
@@ -89,93 +83,7 @@ var testDMLs = []spanner.Statement{
 	{SQL: `INSERT INTO t9 (id1, id2, id3) VALUES (7, 8, 9)`},
 }
 
-var testSchema = schema.Schema{
-	TablesVal: []schema.Table{
-		{
-			NameVal: "t0",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id1", TypeVal: "INT64"},
-				{NameVal: "id2", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0, 1},
-		},
-		{
-			NameVal: "t1",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0},
-		},
-		{
-			NameVal: "t2",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0},
-		},
-		{
-			NameVal: "t3",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id", TypeVal: "INT64"},
-				{NameVal: "col1", TypeVal: "INT64"},
-				{NameVal: "col2", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0},
-		},
-		{
-			NameVal: "t4",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id1", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0},
-		},
-		{
-			NameVal: "t5",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id1", TypeVal: "INT64"},
-				{NameVal: "id2", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0, 1},
-		},
-		{
-			NameVal: "t6",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id1", TypeVal: "INT64"},
-				{NameVal: "id2", TypeVal: "INT64"},
-				{NameVal: "id3", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0, 1, 2},
-		},
-		{
-			NameVal: "t7",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id1", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0},
-		},
-		{
-			NameVal: "t8",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id1", TypeVal: "INT64"},
-				{NameVal: "id2", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0, 1},
-		},
-		{
-			NameVal: "t9",
-			ColumnsVal: []schema.Column{
-				{NameVal: "id1", TypeVal: "INT64"},
-				{NameVal: "id2", TypeVal: "INT64"},
-				{NameVal: "id3", TypeVal: "INT64"},
-			},
-			PrimaryKeyVal: []int{0, 1, 2},
-		},
-	},
-	ParentTables:  []*int{nil, nil, nil, nil, nil, nil, nil, nil, ptr(7), ptr(8)},
-	ForeignTables: [][]int{{}, {0}, {0}, {1, 2}, {}, {4}, {5}, {}, {}, {}},
-}
-
-func TestDBDeleteFunc_WithoutCache(t *testing.T) {
+func TestDBDeleteFunc(t *testing.T) {
 	test.SkipIfNoEnv(t)
 
 	env := test.GetEnvSpanner()
@@ -188,12 +96,10 @@ func TestDBDeleteFunc_WithoutCache(t *testing.T) {
 	test.InitDDL(t, adminClient, fullDatabase, testDDLs)
 	test.InitDML(t, client, testDMLs)
 
-	input := []string{`t0`, `t5`, `t8`}
-	var reader io.Reader = nil
-	writer := bytes.NewBuffer(nil)
+	input := []string{`t3`, `t2`, `t1`, `t0`, `t6`, `t5`, `t4`, `t9`, `t8`, `t7`}
 
 	// sut
-	err := dbdelete.DBDeleteFunc(context.Background(), "spanner", fullDatabase, reader, writer, input)
+	err := dbdelete.DBDeleteFunc(context.Background(), "spanner", fullDatabase, input)
 	if err != nil {
 		t.Errorf(`fail to run: %v`, err)
 	}
@@ -213,98 +119,17 @@ func TestDBDeleteFunc_WithoutCache(t *testing.T) {
 	if r := test.ListRows[struct{}](t, tx, `t3`); len(r) != 0 {
 		t.Errorf("t3 not deleted")
 	}
-	if r := test.ListRows[struct{}](t, tx, `t4`); len(r) == 0 {
-		t.Errorf("t4 unexpectedly deleted")
-	}
-	if r := test.ListRows[struct{}](t, tx, `t5`); len(r) != 0 {
-		t.Errorf("t5 not deleted")
-	}
-	if r := test.ListRows[struct{}](t, tx, `t6`); len(r) != 0 {
-		t.Errorf("t6 not deleted")
-	}
-	if r := test.ListRows[struct{}](t, tx, `t7`); len(r) == 0 {
-		t.Errorf("t4 unexpectedly deleted")
-	}
-	if r := test.ListRows[struct{}](t, tx, `t8`); len(r) != 0 {
-		t.Errorf("t8 not deleted")
-	}
-	if r := test.ListRows[struct{}](t, tx, `t9`); len(r) != 0 {
-		t.Errorf("t9 not deleted")
-	}
-
-	var gotSchema schema.Schema
-	spew.Dump(writer.String())
-	json.Unmarshal(writer.Bytes(), &gotSchema)
-
-	if len(gotSchema.Tables()) != len(testSchema.Tables()) {
-		t.Errorf("len(got.Tables()) != len(want.Tables())\n  got  = %v\n  want = %v", len(gotSchema.Tables()), len(testSchema.Tables()))
-	}
-	for i, want := range testSchema.Tables() {
-		got := gotSchema.Tables()[i]
-
-		equals := got.Name() == want.Name() &&
-			slices.Equal(got.Columns(), want.Columns()) &&
-			slices.Equal(got.PrimaryKey(), want.PrimaryKey())
-
-		if !equals {
-			t.Errorf("table %d not match\n  got  = %v\n  want = %v", i, got, want)
-		}
-	}
-	if !slices.EqualFunc(gotSchema.References(), testSchema.References(), func(got, want []int) bool { return slices.Equal(got, want) }) {
-		t.Errorf("references not match\n  got  = %v\n  want = %v", gotSchema.References(), testSchema.References())
-	}
-}
-
-func TestDBDeleteFunc_WithCache(t *testing.T) {
-	test.SkipIfNoEnv(t)
-
-	env := test.GetEnvSpanner()
-	database := fmt.Sprintf(`dbdelete_%d`, time.Now().UnixNano())
-	fullDatabase := fmt.Sprintf(`projects/%s/instances/%s/databases/%s`, env.Project, env.Instance, database)
-
-	adminClient, client, tearDown := test.Setup(t, database)
-	defer tearDown()
-
-	test.InitDDL(t, adminClient, fullDatabase, testDDLs)
-	test.InitDML(t, client, testDMLs)
-
-	input := []string{`t0`, `t5`, `t8`}
-	schemaByte, _ := testSchema.MarshalJSON()
-	reader := bytes.NewBuffer(schemaByte)
-	writer := bytes.NewBuffer(nil)
-
-	// sut
-	err := dbdelete.DBDeleteFunc(context.Background(), "spanner", fullDatabase, reader, writer, input)
-	if err != nil {
-		t.Errorf(`fail to run: %v`, err)
-	}
-
-	tx := client.ReadOnlyTransaction()
-	defer tx.Close()
-
-	if r := test.ListRows[struct{}](t, tx, `t0`); len(r) != 0 {
-		t.Errorf("t0 not deleted")
-	}
-	if r := test.ListRows[struct{}](t, tx, `t1`); len(r) != 0 {
-		t.Errorf("t1 not deleted")
-	}
-	if r := test.ListRows[struct{}](t, tx, `t2`); len(r) != 0 {
-		t.Errorf("t2 not deleted")
-	}
-	if r := test.ListRows[struct{}](t, tx, `t3`); len(r) != 0 {
+	if r := test.ListRows[struct{}](t, tx, `t4`); len(r) != 0 {
 		t.Errorf("t3 not deleted")
 	}
-	if r := test.ListRows[struct{}](t, tx, `t4`); len(r) == 0 {
-		t.Errorf("t4 unexpectedly deleted")
-	}
 	if r := test.ListRows[struct{}](t, tx, `t5`); len(r) != 0 {
 		t.Errorf("t5 not deleted")
 	}
 	if r := test.ListRows[struct{}](t, tx, `t6`); len(r) != 0 {
 		t.Errorf("t6 not deleted")
 	}
-	if r := test.ListRows[struct{}](t, tx, `t7`); len(r) == 0 {
-		t.Errorf("t4 unexpectedly deleted")
+	if r := test.ListRows[struct{}](t, tx, `t7`); len(r) != 0 {
+		t.Errorf("t3 not deleted")
 	}
 	if r := test.ListRows[struct{}](t, tx, `t8`); len(r) != 0 {
 		t.Errorf("t8 not deleted")
@@ -312,15 +137,4 @@ func TestDBDeleteFunc_WithCache(t *testing.T) {
 	if r := test.ListRows[struct{}](t, tx, `t9`); len(r) != 0 {
 		t.Errorf("t9 not deleted")
 	}
-
-	var gotSchema schema.Schema
-	json.Unmarshal(writer.Bytes(), &gotSchema)
-
-	if writer.Bytes() != nil {
-		t.Errorf("writer.Bytes() != nil")
-	}
-}
-
-func ptr[T any](a T) *T {
-	return &a
 }

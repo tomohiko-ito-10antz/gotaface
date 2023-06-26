@@ -5,7 +5,7 @@ gf-dbdelete is a command-line tool designed to provide a standardized interface 
 ## Usage
 
 ```sh
-gf-dbdelete [-schema <schema-json>] <driver> <data-source>
+gf-dbdelete <driver> <data-source>
 gf-dbdelete -h | --help
 ```
 
@@ -19,22 +19,21 @@ To use gf-dbdelete with Spanner, specify `spanner` as the `<driver>` and provide
 To use gf-dbdelete with SQLite3, set `sqlite3` as the `<driver>` and provide a connection string as the `<data-source>`.
 The connection string should follow the format described in [https://github.com/mattn/go-sqlite3#connection-string](https://github.com/mattn/go-sqlite3#connection-string), such as `file:test.db?cache=shared&mode=memory`.
 
-`gf-dbdelete` fetches schema information to prepare for the deletion and saves the information to a cache file. If the cache file already exists then `gf-dbdelete` uses tht file instead of  fetching the schema information again. To specify the cache file, specify a path of the file as `<schema-json>` using the `-schema` option. The format of the cache file should follow the JSON format described in the Output section in the README.md file of [dbschema](../dbschema/README.md). The default value for `<schema-json>` is `.gf-schema.json`.
-
 ## Input
 
 gf-dbdelete expects a JSON array as input from stdin. The JSON array should have the following structure `DBDeleteInput`:
 
 ```ts
-type DBDeleteInput = string[] // list of the table names to be deleted
+// list of the table names to be deleted. The rows in the tables that come earlier are deleted before the rows in the tables that come later.
+type DBDeleteInput = string[]
 ```
 
 Here's an example:
-```json
-[ "User", "Comment" ]
+```sh
+[ "Comment", "User" ]
 ```
 
-In this example, the JSON input instructs gf-dbdelete to delete existing rows in the User and Comment tables.
+In this example, the JSON input instructs gf-dbdelete to delete existing rows in the Comment table first, followed by the rows in the User table.
 
 ## Output
 

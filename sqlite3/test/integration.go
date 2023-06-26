@@ -29,7 +29,6 @@ func Setup(t *testing.T, dbPath string, queryParams string) (interface {
 	dataSource := dbPath
 	if queryParams != "" {
 		dataSource += `?` + queryParams
-
 	}
 
 	db, err := sql.Open("sqlite3", dataSource)

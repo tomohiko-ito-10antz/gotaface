@@ -3,5 +3,6 @@
 export ENV_SQLITE_TEST_DIR=$(pwd)/sqlite3/test_db
 
 mkdir -p "${ENV_SQLITE_TEST_DIR}"
-go test ./sqlite3/cli/dbschema/...
-go test ./sqlite3/cli/dbdelete/...
+
+mkdir -p "cover/sqlite3"
+go test -cover "./sqlite3/..." -coverprofile="cover/sqlite3/cover.out"  && go tool cover -html="cover/sqlite3/cover.out" -o "cover/sqlite3/cover.html"
