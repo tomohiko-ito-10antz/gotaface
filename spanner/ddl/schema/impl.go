@@ -196,13 +196,13 @@ func NewFetcher(queryer gotaface_spanner.Queryer) schema.Fetcher {
 	return &fetcher{queryer: queryer}
 }
 
-func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
-	tables, err := f.getTables(ctx)
+func FetchSchema(ctx context.Context, queryer gotaface_spanner.Queryer) (*Schema, error) {
+	tables, err := getTables(ctx, queryer)
 	if err != nil {
 		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
 	}
 
-	parents, foreign, err := f.getReferences(ctx, tables)
+	parents, foreign, err := getReferences(ctx, queryer, tables)
 	if err != nil {
 		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
 	}
@@ -214,7 +214,11 @@ func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
 	}, nil
 }
 
-func (f *fetcher) getTables(ctx context.Context) ([]Table, error) {
+func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
+	return FetchSchema(ctx, f.queryer)
+}
+
+func getTables(ctx context.Context, queryer gotaface_spanner.Queryer) ([]Table, error) {
 	type tableColumnRow struct {
 		TableName       string
 		Columns         []string
@@ -224,7 +228,7 @@ func (f *fetcher) getTables(ctx context.Context) ([]Table, error) {
 		KeyPositions    []int64
 	}
 
-	rows := f.queryer.Query(ctx, spanner.Statement{SQL: `
+	rows := queryer.Query(ctx, spanner.Statement{SQL: `
 -- Fetches columns and primary keys
 WITH c AS (
     SELECT
@@ -295,13 +299,13 @@ ORDER BY c.TableName;
 	return tables, nil
 }
 
-func (f *fetcher) getReferences(ctx context.Context, tables []Table) ([]*int, [][]int, error) {
+func getReferences(ctx context.Context, queryer gotaface_spanner.Queryer, tables []Table) ([]*int, [][]int, error) {
 	type referencedTableRow struct {
 		TableName         string
 		ParentTableName   *string
 		ForeignTableNames []string
 	}
-	rows := f.queryer.Query(ctx, spanner.Statement{SQL: `
+	rows := queryer.Query(ctx, spanner.Statement{SQL: `
 -- Fetches parent table and foreign tables
 WITH p AS (
     SELECT
