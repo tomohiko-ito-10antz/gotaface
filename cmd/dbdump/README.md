@@ -9,11 +9,6 @@ gf-dbdump [-schema <schema-json>] <driver> <data-source>
 gf-dbdump -h | --help
 ```
 
-gf-dbdump is a command-line tool used to initialize tables in a data source. It supports the following drivers:
-
-- Spanner
-- SQLite3
-
 To use gf-dbdump with Spanner, specify `spanner` as the `<driver>` and provide a string in the format `projects/<project>/instances/<instance>/databases/<database>` as the `<data-source>`. In this format, `<project>` represents the name of your Google Cloud Platform (GCP) project, `<instance>` is the name of your Spanner instance in the GCP project, and `<database>` is the name of the database within the Spanner instance.
 
 To use gf-dbdump with SQLite3, set `sqlite3` as the `<driver>` and provide a connection string as the `<data-source>`.
