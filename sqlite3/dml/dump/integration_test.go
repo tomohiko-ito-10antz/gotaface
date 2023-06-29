@@ -3,19 +3,14 @@ package dump_test
 import (
 	"context"
 	"database/sql"
-	"os"
 	"testing"
 
 	"github.com/Jumpaku/gotaface/dml"
-	schema_impl "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
+	sqlite3_schema "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
 	"github.com/Jumpaku/gotaface/sqlite3/dml/dump"
 	"github.com/Jumpaku/gotaface/sqlite3/test"
 	"golang.org/x/exp/slices"
 )
-
-func TestMain(m *testing.M) {
-	os.Exit(m.Run())
-}
 
 func TestDumper_Dump(t *testing.T) {
 
@@ -43,7 +38,8 @@ VALUES
 	})
 
 	ctx := context.Background()
-	schema, err := schema_impl.NewFetcher(db).Fetch(ctx)
+
+	schema, err := sqlite3_schema.FetchSchema(ctx, db)
 	if err != nil {
 		t.Fatalf("fail to fetch schema: %v", err)
 	}

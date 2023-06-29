@@ -9,18 +9,18 @@ import (
 	"github.com/Jumpaku/gotaface/ddl/schema"
 	"github.com/Jumpaku/gotaface/dml"
 	"github.com/Jumpaku/gotaface/dml/dump"
-	schema_impl "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
+	sqlite3_schema "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
 	"golang.org/x/exp/slices"
 )
 
 type dumper struct {
 	queryer dbsql.Queryer
-	schema  schema.Schema
+	schema  *sqlite3_schema.Schema
 }
 
 var _ dump.Dumper = dumper{}
 
-func NewDumper(queryer dbsql.Queryer, schema schema.Schema) dumper {
+func NewDumper(queryer dbsql.Queryer, schema *sqlite3_schema.Schema) dumper {
 	return dumper{queryer: queryer, schema: schema}
 }
 
@@ -69,7 +69,7 @@ func (dumper dumper) getTableInfo(tableName string) (schema.Table, []string, dbs
 
 	scanTypes := dbsql.ScanRowTypes{}
 	for _, column := range table.Columns() {
-		scanTypes[column.Name()] = schema_impl.GoType(column)
+		scanTypes[column.Name()] = sqlite3_schema.GoType(column)
 	}
 
 	return table, orderBy, scanTypes, nil

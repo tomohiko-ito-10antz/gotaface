@@ -63,9 +63,9 @@ CREATE TABLE t6 (
 }
 
 func TestDBDeleteFunc_ForeignKey(t *testing.T) {
-	sqliteTestDir := os.Getenv(test.EnvSqliteTestDir)
+	sqliteTestDir := os.Getenv(test.EnvSQLiteTestDir)
 	if sqliteTestDir == "" {
-		t.Skipf(`skipped because environment variable %s is not set`, test.EnvSqliteTestDir)
+		t.Skipf(`skipped because environment variable %s is not set`, test.EnvSQLiteTestDir)
 	}
 
 	dbPath := fmt.Sprintf(`%s/cli_dbdelete_%d.db`, sqliteTestDir, time.Now().UnixNano())

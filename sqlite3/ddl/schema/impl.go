@@ -166,13 +166,13 @@ func NewFetcher(db dbsql.Queryer) schema.Fetcher {
 	return &fetcher{queryer: db}
 }
 
-func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
-	tables, err := f.getTables(ctx)
+func FetchSchema(ctx context.Context, queryer dbsql.Queryer) (*Schema, error) {
+	tables, err := getTables(ctx, queryer)
 	if err != nil {
 		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
 	}
 
-	references, err := f.getReferences(ctx, tables)
+	references, err := getReferences(ctx, queryer, tables)
 	if err != nil {
 		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
 	}
@@ -183,7 +183,11 @@ func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
 	}, nil
 }
 
-func (f *fetcher) getTables(ctx context.Context) ([]Table, error) {
+func (f *fetcher) Fetch(ctx context.Context) (schema.Schema, error) {
+	return FetchSchema(ctx, f.queryer)
+}
+
+func getTables(ctx context.Context, queryer dbsql.Queryer) ([]Table, error) {
 	type tableColumnRow struct {
 		TableName  string
 		ColumnName string
@@ -191,7 +195,7 @@ func (f *fetcher) getTables(ctx context.Context) ([]Table, error) {
 		PKNumber   int
 	}
 
-	rows, err := f.queryer.QueryContext(ctx, `
+	rows, err := queryer.QueryContext(ctx, `
 SELECT
     m.name AS TableName,
     c.name AS ColumnName,
@@ -231,13 +235,13 @@ ORDER BY m.name, c.cid
 	return tables, nil
 }
 
-func (f *fetcher) getReferences(ctx context.Context, tables []Table) ([][]int, error) {
+func getReferences(ctx context.Context, queryer dbsql.Queryer, tables []Table) ([][]int, error) {
 	type foreignTableRow struct {
 		TableName        string
 		ForeignTableName string
 	}
 
-	rows, err := f.queryer.QueryContext(ctx, `
+	rows, err := queryer.QueryContext(ctx, `
 SELECT
     m.name AS TableName,
     f."table" AS ForeignTableName

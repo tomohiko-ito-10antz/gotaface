@@ -15,9 +15,9 @@ import (
 )
 
 func TestRunner_Run_SQLite(t *testing.T) {
-	sqliteTestDir := os.Getenv(test.EnvSqliteTestDir)
+	sqliteTestDir := os.Getenv(test.EnvSQLiteTestDir)
 	if sqliteTestDir == "" {
-		t.Skipf(`skipped because environment variable %s is not set`, test.EnvSqliteTestDir)
+		t.Skipf(`skipped because environment variable %s is not set`, test.EnvSQLiteTestDir)
 	}
 
 	dataSource := fmt.Sprintf(`%s/cli_dbschema_%d.db`, sqliteTestDir, time.Now().UnixNano())
