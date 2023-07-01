@@ -5,59 +5,59 @@ import (
 	"testing"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/spanner/ddl/schema"
+	spanner_impl "github.com/Jumpaku/gotaface/spanner"
 )
 
 func TestGoType(t *testing.T) {
 	type testCase struct {
-		input schema.Column
+		input string
 		want  reflect.Type
 	}
 	testCases := []testCase{
 		{
-			input: schema.Column{TypeVal: "INT64"},
-			want:  schema.RefType[spanner.NullInt64](),
+			input: "INT64",
+			want:  spanner_impl.RefType[spanner.NullInt64](),
 		}, {
-			input: schema.Column{TypeVal: "STRING(MAX)"},
-			want:  schema.RefType[spanner.NullString](),
+			input: "STRING(MAX)",
+			want:  spanner_impl.RefType[spanner.NullString](),
 		}, {
-			input: schema.Column{TypeVal: "BOOL"},
-			want:  schema.RefType[spanner.NullBool](),
+			input: "BOOL",
+			want:  spanner_impl.RefType[spanner.NullBool](),
 		}, {
-			input: schema.Column{TypeVal: "FLOAT64"},
-			want:  schema.RefType[spanner.NullFloat64](),
+			input: "FLOAT64",
+			want:  spanner_impl.RefType[spanner.NullFloat64](),
 		}, {
-			input: schema.Column{TypeVal: "TIMESTAMP"},
-			want:  schema.RefType[spanner.NullTime](),
+			input: "TIMESTAMP",
+			want:  spanner_impl.RefType[spanner.NullTime](),
 		}, {
-			input: schema.Column{TypeVal: "DATE"},
-			want:  schema.RefType[spanner.NullDate](),
+			input: "DATE",
+			want:  spanner_impl.RefType[spanner.NullDate](),
 		}, {
-			input: schema.Column{TypeVal: "NUMERIC"},
-			want:  schema.RefType[spanner.NullNumeric](),
+			input: "NUMERIC",
+			want:  spanner_impl.RefType[spanner.NullNumeric](),
 		}, {
-			input: schema.Column{TypeVal: "BYTES(255)"},
-			want:  schema.RefType[[]byte](),
+			input: "BYTES(255)",
+			want:  spanner_impl.RefType[[]byte](),
 		}, {
-			input: schema.Column{TypeVal: "JSON"},
-			want:  schema.RefType[spanner.NullJSON](),
+			input: "JSON",
+			want:  spanner_impl.RefType[spanner.NullJSON](),
 		}, {
-			input: schema.Column{TypeVal: "ARRAY<INT64>"},
-			want:  schema.RefType[[]spanner.NullInt64](),
+			input: "ARRAY<INT64>",
+			want:  spanner_impl.RefType[[]spanner.NullInt64](),
 		}, {
-			input: schema.Column{TypeVal: "ARRAY<STRUCT<INT64>>"},
-			want:  schema.RefType[[]spanner.NullRow](),
+			input: "ARRAY<STRUCT<INT64>>",
+			want:  spanner_impl.RefType[[]spanner.NullRow](),
 		}, {
-			input: schema.Column{TypeVal: "STRUCT<x INT64, y STRING(12)>"},
-			want:  schema.RefType[spanner.NullRow](),
+			input: "STRUCT<x INT64, y STRING(12)>",
+			want:  spanner_impl.RefType[spanner.NullRow](),
 		}, {
-			input: schema.Column{TypeVal: "STRUCT<ARRAY<INT64>>"},
-			want:  schema.RefType[spanner.NullRow](),
+			input: "STRUCT<ARRAY<INT64>>",
+			want:  spanner_impl.RefType[spanner.NullRow](),
 		},
 	}
 
 	for _, testCase := range testCases {
-		got := schema.GoType(testCase.input)
+		got := spanner_impl.GoType(testCase.input)
 		if got.Name() != testCase.want.Name() {
 			t.Errorf("GoType() mismatch\n  got  = %v\n  want = %v", got, testCase.want)
 		}

@@ -49,8 +49,8 @@ func (dumper dumper) Dump(ctx context.Context, tableName string) (dml.Rows, erro
 	rows := dml.Rows{}
 	err := itr.Do(func(r *spanner.Row) error {
 		row := dml.Row{}
-		for _, column := range table.Columns() {
-			rvPtr := reflect.New(spanner_schema.GoType(column))
+		for _, column := range table.ColumnsVal {
+			rvPtr := reflect.New(gotaface_spanner.GoType(column.Type()))
 			err := r.ColumnByName(column.Name(), rvPtr.Interface())
 			if err != nil {
 				return fmt.Errorf(`fail to scan column %s : %w`, column.Name(), err)

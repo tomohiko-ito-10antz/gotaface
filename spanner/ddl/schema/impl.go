@@ -5,8 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
-	"strings"
 
 	"cloud.google.com/go/spanner"
 	"github.com/Jumpaku/gotaface/ddl/schema"
@@ -24,41 +22,6 @@ func (c Column) Name() string {
 }
 func (c Column) Type() string {
 	return c.TypeVal
-}
-
-func RefType[T any]() reflect.Type {
-	var t T
-	return reflect.TypeOf(t)
-}
-
-func GoType(c schema.Column) reflect.Type {
-	lower := strings.ToLower(c.Type())
-	switch {
-	case strings.HasPrefix(lower, "int64"):
-		return RefType[spanner.NullInt64]()
-	case strings.HasPrefix(lower, "string"):
-		return RefType[spanner.NullString]()
-	case strings.HasPrefix(lower, "bool"):
-		return RefType[spanner.NullBool]()
-	case strings.HasPrefix(lower, "float64"):
-		return RefType[spanner.NullFloat64]()
-	case strings.HasPrefix(lower, "timestamp"):
-		return RefType[spanner.NullTime]()
-	case strings.HasPrefix(lower, "date"):
-		return RefType[spanner.NullDate]()
-	case strings.HasPrefix(lower, "numeric"):
-		return RefType[spanner.NullNumeric]()
-	case strings.HasPrefix(lower, "bytes"):
-		return RefType[[]byte]()
-	case strings.HasPrefix(lower, "json"):
-		return RefType[spanner.NullJSON]()
-	case strings.HasPrefix(lower, "array<"):
-		return reflect.SliceOf(GoType(Column{TypeVal: lower[6 : len(lower)-1]}))
-	case strings.HasPrefix(lower, "struct"):
-		return RefType[spanner.NullRow]()
-	default:
-		return RefType[spanner.GenericColumnValue]()
-	}
 }
 
 type Table struct {

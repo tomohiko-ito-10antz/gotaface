@@ -109,6 +109,7 @@ func (runner Runner) Run(ctx context.Context, stdin io.Reader, stdout io.Writer)
 	var input DBInsertInput
 	d := json.NewDecoder(stdin)
 	d.DisallowUnknownFields()
+	d.UseNumber()
 	if err := d.Decode(&input); err != nil {
 		return fmt.Errorf(`fail to decode JSON from stdin`)
 	}
