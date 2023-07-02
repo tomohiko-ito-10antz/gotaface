@@ -62,7 +62,7 @@ func DBInsertFunc(ctx context.Context, driver string, dataSource string, schemaR
 			for _, inputRow := range input.Rows {
 				row := dml.Row{}
 				for column, value := range inputRow {
-					row[column], err = spanner_impl.ConvertValue(columnMap[column].Type(), value)
+					row[column], err = spanner_impl.ToDBValue(columnMap[column].Type(), value)
 				}
 				rows = append(rows, row)
 			}
