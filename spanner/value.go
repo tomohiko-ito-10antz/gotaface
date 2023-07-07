@@ -115,24 +115,10 @@ func ToDBValue(columnType string, src any) (any, error) {
 				return nil, fmt.Errorf(`fail to convert %v as NullInt64: %w`, spew.Sdump(src), err)
 			}
 			return spanner.NullInt64{Valid: true, Int64: dst}, nil
-		case int:
-			return ToDBValue(columnType, int64(src))
-		case int8:
-			return ToDBValue(columnType, int64(src))
-		case int16:
-			return ToDBValue(columnType, int64(src))
-		case int32:
-			return ToDBValue(columnType, int64(src))
-		case uint:
-			return ToDBValue(columnType, int64(src))
-		case uint8:
-			return ToDBValue(columnType, int64(src))
-		case uint16:
-			return ToDBValue(columnType, int64(src))
-		case uint32:
-			return ToDBValue(columnType, int64(src))
-		case uint64:
-			return ToDBValue(columnType, int64(src))
+		case int, int8, int16, int32:
+			return ToDBValue(columnType, mustInt64(src))
+		case uint, uint8, uint16, uint32, uint64:
+			return ToDBValue(columnType, int64(mustUint64(src)))
 		default:
 			dst := &spanner.NullInt64{}
 			if err := dst.Scan(src); err != nil {

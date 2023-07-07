@@ -2,11 +2,8 @@ package schema
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
-	"reflect"
-	"strings"
 
 	"github.com/Jumpaku/gotaface/dbsql"
 	"github.com/Jumpaku/gotaface/ddl/schema"
@@ -24,26 +21,6 @@ func (c Column) Name() string {
 }
 func (c Column) Type() string {
 	return c.TypeVal
-}
-
-func RefType[T any]() reflect.Type {
-	var t T
-	return reflect.TypeOf(t)
-}
-func GoType(c schema.Column) reflect.Type {
-	lower := strings.ToLower(c.Type())
-	switch {
-	case strings.Contains(lower, "int"):
-		return RefType[sql.NullInt64]()
-	case strings.Contains(lower, "char"), strings.Contains(lower, "clob"), strings.Contains(lower, "text"):
-		return RefType[sql.NullString]()
-	case strings.Contains(lower, "blob"), lower == "":
-		return RefType[[]byte]()
-	case strings.Contains(lower, "real"), strings.Contains(lower, "floa"), strings.Contains(lower, "doub"):
-		return RefType[sql.NullFloat64]()
-	default:
-		return RefType[sql.NullString]()
-	}
 }
 
 type Table struct {

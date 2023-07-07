@@ -99,15 +99,15 @@ func LoadSchemaCache(schema string) (io.Reader, error) {
 }
 
 type dbInsertRows struct {
-	name string   `json:"name"`
-	rows dml.Rows `json:"rows"`
+	NameVal string   `json:"name"`
+	RowsVal dml.Rows `json:"rows"`
 }
 
 func (r dbInsertRows) Name() string {
-	return r.name
+	return r.NameVal
 }
 func (r dbInsertRows) Rows() dml.Rows {
-	return r.rows
+	return r.RowsVal
 }
 
 type dbInsertInput []dbInsertRows
