@@ -317,6 +317,34 @@ func TestToDBValue_BOOL(t *testing.T) {
 	}
 }
 
+func TestToDBValue_STRING(t *testing.T) {
+	testCases := []testCaseToDBValue{
+		// FLOAT64
+		{
+			typ:  "STRING(MAX)",
+			src:  nil,
+			want: spanner.NullString{},
+		}, {
+			typ:  "STRING(MAX)",
+			src:  "abc",
+			want: spanner.NullString{Valid: true, StringVal: "abc"},
+		}, {
+			typ:  "STRING(MAX)",
+			src:  ptr("abc"),
+			want: spanner.NullString{Valid: true, StringVal: "abc"},
+		}, {
+			typ:  "STRING(MAX)",
+			src:  (*string)(nil),
+			want: spanner.NullString{},
+		},
+	}
+
+	for i, testCase := range testCases {
+		got, err := spanner_impl.ToDBValue(testCase.typ, testCase.src)
+		checkTestCase(t, i, got, err, testCase)
+	}
+}
+
 func TestToDBValue_FLOAT64(t *testing.T) {
 	testCases := []testCaseToDBValue{
 		// FLOAT64

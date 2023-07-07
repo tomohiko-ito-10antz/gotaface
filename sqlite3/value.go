@@ -35,6 +35,8 @@ func GoType(columnType string) reflect.Type {
 
 func mustInt64(v any) int64 {
 	switch v := v.(type) {
+	default:
+		panic(`cannot convert to int64`)
 	case int:
 		return int64(v)
 	case int8:
@@ -45,37 +47,18 @@ func mustInt64(v any) int64 {
 		return int64(v)
 	case int64:
 		return int64(v)
-	default:
-		panic(`cannot convert to int64`)
-	}
-}
-func mustUint64(v any) uint64 {
-	switch v := v.(type) {
 	case uint:
-		return uint64(v)
+		return int64(v)
 	case uint8:
-		return uint64(v)
+		return int64(v)
 	case uint16:
-		return uint64(v)
+		return int64(v)
 	case uint32:
-		return uint64(v)
+		return int64(v)
 	case uint64:
-		return uint64(v)
-	default:
-		panic(`cannot convert to uint64`)
+		return int64(v)
 	}
 }
-func mustFloat64(v any) float64 {
-	switch v := v.(type) {
-	case float32:
-		return float64(v)
-	case float64:
-		return float64(v)
-	default:
-		panic(`cannot convert to float64`)
-	}
-}
-
 func ToDBValue(columnType string, src any) (any, error) {
 	rv := reflect.ValueOf(src)
 	if !rv.IsValid() || (rv.Kind() == reflect.Pointer && rv.IsNil()) {
@@ -97,10 +80,8 @@ func ToDBValue(columnType string, src any) (any, error) {
 				return nil, fmt.Errorf(`fail to convert %v as NullInt64: %w`, spew.Sdump(src), err)
 			}
 			return sql.NullInt64{Valid: true, Int64: dst}, nil
-		case int, int8, int16, int32:
+		case int, int8, int16, int32, uint, uint8, uint16, uint32, uint64:
 			return ToDBValue(columnType, mustInt64(src))
-		case uint, uint8, uint16, uint32, uint64:
-			return ToDBValue(columnType, mustUint64(src))
 		default:
 			dst := &sql.NullInt64{}
 			if err := dst.Scan(src); err != nil {
