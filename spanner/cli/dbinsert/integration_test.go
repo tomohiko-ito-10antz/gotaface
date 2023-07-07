@@ -11,6 +11,7 @@ import (
 
 	"cloud.google.com/go/spanner"
 	"github.com/Jumpaku/gotaface/dml"
+	gotaface_spanner "github.com/Jumpaku/gotaface/spanner"
 	"github.com/Jumpaku/gotaface/spanner/cli/dbinsert"
 	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
 	"github.com/Jumpaku/gotaface/spanner/test"
@@ -160,16 +161,27 @@ func TestDBInsertFunc_WithSchemaCache(t *testing.T) {
 	for _, want := range testInput[0].Rows() {
 		key := map[string]any{"id1": want["id1"], "id2": want["id2"]}
 		got := test.FindRow[struct {
-			Id1 int
-			Id2 int
+			Id1 int64
+			Id2 int64
 		}](t, client.Single(), `t0`, key)
 		if got == nil {
 			t.Errorf("row not found\n  got  = %v\n  want = %v", got, want)
 		}
 	}
 	for _, want := range testInput[1].Rows() {
-		type Row struct {
-			Col_integer   int64
+		var (
+			Col_integer, _   = gotaface_spanner.ToDBValue("INT64", want["col_integer"])
+			Col_string, _    = gotaface_spanner.ToDBValue("STRING(MAX)", want["col_string"])
+			Col_float, _     = gotaface_spanner.ToDBValue("FLOAT64", want["col_float"])
+			Col_bytes, _     = gotaface_spanner.ToDBValue("BYTES(256)", want["col_bytes"])
+			Col_bool, _      = gotaface_spanner.ToDBValue("BOOL", want["col_bool"])
+			Col_timestamp, _ = gotaface_spanner.ToDBValue("TIMESTAMP", want["col_timestamp"])
+			Col_date, _      = gotaface_spanner.ToDBValue("DATE", want["col_date"])
+			Col_json, _      = gotaface_spanner.ToDBValue("JSON", want["col_json"])
+			Col_array, _     = gotaface_spanner.ToDBValue("ARRAY<INT64>", want["col_array"])
+		)
+		got := test.FindRow[struct {
+			Col_integer   spanner.NullInt64
 			Col_string    spanner.NullString
 			Col_float     spanner.NullFloat64
 			Col_bytes     []byte
@@ -178,32 +190,19 @@ func TestDBInsertFunc_WithSchemaCache(t *testing.T) {
 			Col_date      spanner.NullDate
 			Col_json      spanner.NullJSON
 			Col_array     []spanner.NullInt64
-		}
-		want := Row{
-			Col_integer:   want["Col_integer"].(int64),
-			Col_string:    want["Col_string"].(spanner.NullString),
-			Col_float:     want["Col_float"].(spanner.NullFloat64),
-			Col_bytes:     want["Col_bytes"].([]byte),
-			Col_bool:      want["Col_bool"].(spanner.NullBool),
-			Col_timestamp: want["Col_timestamp"].(spanner.NullTime),
-			Col_date:      want["Col_date"].(spanner.NullDate),
-			Col_json:      want["Col_json"].(spanner.NullJSON),
-			Col_array:     want["Col_array"].([]spanner.NullInt64),
-		}
-
-		got := test.FindRow[Row](t, client.Single(), `t1`, map[string]any{"Col_integer": want.Col_integer})
+		}](t, client.Single(), `t1`, map[string]any{"Col_integer": Col_integer})
 		if got == nil {
 			t.Errorf("row not found\n  got = %v\n  want = %v", got, want)
 		}
-		eq := equals(got.Col_integer, want.Col_integer) &&
-			equals(got.Col_string, want.Col_string) &&
-			equals(got.Col_float, want.Col_float) &&
-			equals(got.Col_bytes, want.Col_bytes) &&
-			equals(got.Col_bool, want.Col_bool) &&
-			equals(got.Col_timestamp, want.Col_timestamp) &&
-			equals(got.Col_date, want.Col_date) &&
-			equals(got.Col_json, want.Col_json) &&
-			equals(got.Col_array, want.Col_array)
+		eq := equals(got.Col_integer, Col_integer) &&
+			equals(got.Col_string, Col_string) &&
+			equals(got.Col_float, Col_float) &&
+			equals(got.Col_bytes, Col_bytes) &&
+			equals(got.Col_bool, Col_bool) &&
+			equals(got.Col_timestamp, Col_timestamp) &&
+			equals(got.Col_date, Col_date) &&
+			equals(got.Col_json, Col_json) &&
+			equals(got.Col_array, Col_array)
 		if !eq {
 			t.Errorf("row not found\n  got = %v\n  want = %v", got, want)
 		}
@@ -234,16 +233,27 @@ func TestDBInsertFunc_WithoutSchemaCache(t *testing.T) {
 	for _, want := range testInput[0].Rows() {
 		key := map[string]any{"id1": want["id1"], "id2": want["id2"]}
 		got := test.FindRow[struct {
-			Id1 int
-			Id2 int
+			Id1 int64
+			Id2 int64
 		}](t, client.Single(), `t0`, key)
 		if got == nil {
 			t.Errorf("row not found\n  got  = %v\n  want = %v", got, want)
 		}
 	}
 	for _, want := range testInput[1].Rows() {
-		type Row struct {
-			Col_integer   int64
+		var (
+			Col_integer, _   = gotaface_spanner.ToDBValue("INT64", want["col_integer"])
+			Col_string, _    = gotaface_spanner.ToDBValue("STRING(MAX)", want["col_string"])
+			Col_float, _     = gotaface_spanner.ToDBValue("FLOAT64", want["col_float"])
+			Col_bytes, _     = gotaface_spanner.ToDBValue("BYTES(256)", want["col_bytes"])
+			Col_bool, _      = gotaface_spanner.ToDBValue("BOOL", want["col_bool"])
+			Col_timestamp, _ = gotaface_spanner.ToDBValue("TIMESTAMP", want["col_timestamp"])
+			Col_date, _      = gotaface_spanner.ToDBValue("DATE", want["col_date"])
+			Col_json, _      = gotaface_spanner.ToDBValue("JSON", want["col_json"])
+			Col_array, _     = gotaface_spanner.ToDBValue("ARRAY<INT64>", want["col_array"])
+		)
+		got := test.FindRow[struct {
+			Col_integer   spanner.NullInt64
 			Col_string    spanner.NullString
 			Col_float     spanner.NullFloat64
 			Col_bytes     []byte
@@ -252,32 +262,19 @@ func TestDBInsertFunc_WithoutSchemaCache(t *testing.T) {
 			Col_date      spanner.NullDate
 			Col_json      spanner.NullJSON
 			Col_array     []spanner.NullInt64
-		}
-		want := Row{
-			Col_integer:   want["Col_integer"].(int64),
-			Col_string:    want["Col_string"].(spanner.NullString),
-			Col_float:     want["Col_float"].(spanner.NullFloat64),
-			Col_bytes:     want["Col_bytes"].([]byte),
-			Col_bool:      want["Col_bool"].(spanner.NullBool),
-			Col_timestamp: want["Col_timestamp"].(spanner.NullTime),
-			Col_date:      want["Col_date"].(spanner.NullDate),
-			Col_json:      want["Col_json"].(spanner.NullJSON),
-			Col_array:     want["Col_array"].([]spanner.NullInt64),
-		}
-
-		got := test.FindRow[Row](t, client.Single(), `t1`, map[string]any{"Col_integer": want.Col_integer})
+		}](t, client.Single(), `t1`, map[string]any{"Col_integer": Col_integer})
 		if got == nil {
 			t.Errorf("row not found\n  got = %v\n  want = %v", got, want)
 		}
-		eq := equals(got.Col_integer, want.Col_integer) &&
-			equals(got.Col_string, want.Col_string) &&
-			equals(got.Col_float, want.Col_float) &&
-			equals(got.Col_bytes, want.Col_bytes) &&
-			equals(got.Col_bool, want.Col_bool) &&
-			equals(got.Col_timestamp, want.Col_timestamp) &&
-			equals(got.Col_date, want.Col_date) &&
-			equals(got.Col_json, want.Col_json) &&
-			equals(got.Col_array, want.Col_array)
+		eq := equals(got.Col_integer, Col_integer) &&
+			equals(got.Col_string, Col_string) &&
+			equals(got.Col_float, Col_float) &&
+			equals(got.Col_bytes, Col_bytes) &&
+			equals(got.Col_bool, Col_bool) &&
+			equals(got.Col_timestamp, Col_timestamp) &&
+			equals(got.Col_date, Col_date) &&
+			equals(got.Col_json, Col_json) &&
+			equals(got.Col_array, Col_array)
 		if !eq {
 			t.Errorf("row not found\n  got = %v\n  want = %v", got, want)
 		}
