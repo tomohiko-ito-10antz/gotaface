@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/Jumpaku/gotaface/dbsql"
 	"github.com/Jumpaku/gotaface/ddl/schema"
@@ -264,4 +265,25 @@ ORDER BY m.name, f."table"
 	}
 
 	return references, nil
+}
+
+func FetchSchemaOrUseCache(ctx context.Context, schemaReader io.Reader, schemaWriter io.Writer, queryer dbsql.Queryer) (*Schema, error) {
+	if schemaReader != nil {
+		schema := new(Schema)
+		if err := json.NewDecoder(schemaReader).Decode(schema); err != nil {
+			return nil, fmt.Errorf(`fail to decode schema JSON: %w`, err)
+		}
+		return schema, nil
+	}
+	var err error
+	schema, err := FetchSchema(ctx, queryer)
+	if err != nil {
+		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
+	}
+
+	if err := json.NewEncoder(schemaWriter).Encode(schema); err != nil {
+		return nil, fmt.Errorf(`fail to encode schema JSON: %w`, err)
+	}
+
+	return schema, nil
 }

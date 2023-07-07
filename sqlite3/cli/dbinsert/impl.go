@@ -3,7 +3,6 @@ package dbinsert
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io"
 
@@ -35,22 +34,9 @@ func DBInsertFunc(ctx context.Context, driver string, dataSource string, schemaR
 	}
 	defer tx.Rollback()
 
-	var schema *sqlite3_schema.Schema
-	if schemaReader == nil {
-		var err error
-		schema, err = sqlite3_schema.FetchSchema(ctx, tx)
-		if err != nil {
-			return fmt.Errorf(`fail to fetch schema: %w`, err)
-		}
-
-		if err := json.NewEncoder(schemaWriter).Encode(schema); err != nil {
-			return fmt.Errorf(`fail to encode schema JSON: %w`, err)
-		}
-	} else {
-		schema = new(sqlite3_schema.Schema)
-		if err := json.NewDecoder(schemaReader).Decode(schema); err != nil {
-			return fmt.Errorf(`fail to decode schema JSON: %w`, err)
-		}
+	schema, err := sqlite3_schema.FetchSchemaOrUseCache(ctx, schemaReader, schemaWriter, tx)
+	if err != nil {
+		return fmt.Errorf(`fail to fetch schema or use cache: %w`, err)
 	}
 
 	tableMap := map[string]sqlite3_schema.Table{}
