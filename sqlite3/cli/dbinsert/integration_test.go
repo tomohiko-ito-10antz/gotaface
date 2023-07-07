@@ -1,75 +1,60 @@
 package dbinsert_test
 
-/*
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"testing"
 	"time"
 
-	"cloud.google.com/go/spanner"
 	"github.com/Jumpaku/gotaface/dml"
-	gotaface_spanner "github.com/Jumpaku/gotaface/spanner"
-	"github.com/Jumpaku/gotaface/spanner/cli/dbinsert"
-	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
-	"github.com/Jumpaku/gotaface/spanner/test"
+	gotaface_sqlite3 "github.com/Jumpaku/gotaface/sqlite3"
+	"github.com/Jumpaku/gotaface/sqlite3/cli/dbinsert"
+	sqlite3_schema "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
+	"github.com/Jumpaku/gotaface/sqlite3/test"
 	"golang.org/x/exp/slices"
 )
 
-var testDDLs = []string{`
-CREATE TABLE t0 (
-	id1 INT64,
-	id2 INT64,
-) PRIMARY KEY (id1, id2)
-`, `
-CREATE TABLE t1 (
-	col_integer   INT64,
-	col_string    STRING(MAX),
-	col_float     FLOAT64,
-	col_bytes     BYTES(16),
-	col_bool      BOOL,
-	col_timestamp TIMESTAMP,
-	col_date      DATE,
-	col_json      JSON,
-	col_array    ARRAY<INT64>,
-) PRIMARY KEY (col_integer)
-`,
+var testInitStmt = []test.Statement{
+	{SQL: `CREATE TABLE t0 (
+		id1 INT,
+		id2 INT,
+		PRIMARY KEY (id1, id2));`},
+	{SQL: `CREATE TABLE t1 (
+	col_int INT,
+	col_text TEXT,
+	col_real REAL,
+	col_blob BLOB,
+	PRIMARY KEY (col_int));`},
 }
 
-var testSchema = &spanner_schema.Schema{
-	TablesVal: []spanner_schema.Table{
+var testSchema = &sqlite3_schema.Schema{
+	TablesVal: []sqlite3_schema.Table{
 		{
 			NameVal: `t0`,
-			ColumnsVal: []spanner_schema.Column{
-				{NameVal: `id1`, TypeVal: "INT64"},
-				{NameVal: `id2`, TypeVal: "INT64"},
+			ColumnsVal: []sqlite3_schema.Column{
+				{NameVal: `id1`, TypeVal: "INT"},
+				{NameVal: `id2`, TypeVal: "INT"},
 			},
 			PrimaryKeyVal: []int{0, 1},
 		},
 		{
 			NameVal: `t1`,
-			ColumnsVal: []spanner_schema.Column{
-				{NameVal: `col_integer`, TypeVal: "INT64"},
-				{NameVal: `col_string`, TypeVal: "STRING(MAX)"},
-				{NameVal: `col_float`, TypeVal: "FLOAT64"},
-				{NameVal: `col_bytes`, TypeVal: "BYTES(16)"},
-				{NameVal: `col_bool`, TypeVal: "BOOL"},
-				{NameVal: `col_timestamp`, TypeVal: "TIMESTAMP"},
-				{NameVal: `col_date`, TypeVal: "DATE"},
-				{NameVal: `col_json`, TypeVal: "JSON"},
-				{NameVal: `col_array`, TypeVal: "ARRAY<INT64>"},
+			ColumnsVal: []sqlite3_schema.Column{
+				{NameVal: `col_int`, TypeVal: "INT"},
+				{NameVal: `col_text`, TypeVal: "TEXT"},
+				{NameVal: `col_real`, TypeVal: "REAL"},
+				{NameVal: `col_blob`, TypeVal: "BLOB"},
 			},
 			PrimaryKeyVal: []int{0},
 		},
 	},
-	ParentTables:  []*int{nil, nil},
-	ForeignTables: [][]int{{}, {}},
+	ReferencesVal: [][]int{{}, {}},
 }
-
-var wantJSON = map[string]any{"a": 1, "b": "x", "c": nil, "d": []any{map[string]any{}, []any{}}, "e": map[string]any{"x": map[string]any{}, "y": []any{}}}
 
 type dbInsertRows struct {
 	name string
@@ -106,15 +91,10 @@ var testInput = dbInsertInput{
 		name: `t1`,
 		rows: []dml.Row{
 			map[string]any{
-				`col_integer`:   1,
-				`col_string`:    `abc`,
-				`col_float`:     1.25,
-				`col_bytes`:     []byte(`1234abcd`),
-				`col_bool`:      true,
-				`col_timestamp`: "2023-07-03T00:23:32Z",
-				`col_date`:      "2023-07-03",
-				`col_json`:      wantJSON,
-				`col_array`:     []any{1, 2, 3},
+				`col_int`:  3,
+				`col_text`: `jkl`,
+				`col_real`: 2.00,
+				`col_blob`: []byte(`211jkl`),
 			},
 		},
 	},
@@ -126,26 +106,28 @@ func equals(got any, want any) bool {
 		return got == want
 	case []byte:
 		return slices.Equal(got.([]byte), want.([]byte))
-	case spanner.NullJSON:
-		got, _ := got.(spanner.NullJSON).MarshalJSON()
-		want, _ := want.(spanner.NullJSON).MarshalJSON()
-		return string(got) == string(want)
-	case []spanner.NullInt64:
-		return slices.Equal(got.([]spanner.NullInt64), want.([]spanner.NullInt64))
 	}
 }
 
+func getEnvSQLiteTestDirOrSkip(t *testing.T) string {
+	t.Helper()
+
+	sqliteTestDir := os.Getenv(test.EnvSQLiteTestDir)
+	if sqliteTestDir == "" {
+		t.Skipf(`skipped because environment variable %s is not set`, test.EnvSQLiteTestDir)
+	}
+
+	return sqliteTestDir
+}
+
 func TestDBInsertFunc_WithSchemaCache(t *testing.T) {
-	test.SkipIfNoEnv(t)
+	sqliteTestDir := getEnvSQLiteTestDirOrSkip(t)
 
-	env := test.GetEnvSpanner()
-	database := fmt.Sprintf(`dbinsert_%d`, time.Now().UnixNano())
-	fullDatabase := fmt.Sprintf(`projects/%s/instances/%s/databases/%s`, env.Project, env.Instance, database)
-
-	adminClient, client, tearDown := test.Setup(t, database)
+	dbPath := fmt.Sprintf(`%s/cli_dbinsert_%d.db`, sqliteTestDir, time.Now().UnixNano())
+	db, tearDown := test.Setup(t, dbPath, "")
 	defer tearDown()
 
-	test.InitDDL(t, adminClient, fullDatabase, testDDLs)
+	test.Init(t, db, testInitStmt)
 
 	var schemaReader *bytes.Buffer = bytes.NewBuffer(nil)
 	if err := json.NewEncoder(schemaReader).Encode(testSchema); err != nil {
@@ -154,7 +136,7 @@ func TestDBInsertFunc_WithSchemaCache(t *testing.T) {
 	var schemaWriter io.Writer = nil
 
 	// sut
-	err := dbinsert.DBInsertFunc(context.Background(), "spanner", fullDatabase, schemaReader, schemaWriter, testInput)
+	err := dbinsert.DBInsertFunc(context.Background(), "sqlite3", dbPath, schemaReader, schemaWriter, testInput)
 	if err != nil {
 		t.Errorf(`fail to run: %v`, err)
 	}
@@ -164,46 +146,31 @@ func TestDBInsertFunc_WithSchemaCache(t *testing.T) {
 		got := test.FindRow[struct {
 			Id1 int64
 			Id2 int64
-		}](t, client.Single(), `t0`, key)
+		}](t, db, `t0`, key)
 		if got == nil {
 			t.Errorf("row not found\n  got  = %v\n  want = %v", got, want)
 		}
 	}
 	for _, want := range testInput[1].Rows() {
 		var (
-			Col_integer, _   = gotaface_spanner.ToDBValue("INT64", want["col_integer"])
-			Col_string, _    = gotaface_spanner.ToDBValue("STRING(MAX)", want["col_string"])
-			Col_float, _     = gotaface_spanner.ToDBValue("FLOAT64", want["col_float"])
-			Col_bytes, _     = gotaface_spanner.ToDBValue("BYTES(256)", want["col_bytes"])
-			Col_bool, _      = gotaface_spanner.ToDBValue("BOOL", want["col_bool"])
-			Col_timestamp, _ = gotaface_spanner.ToDBValue("TIMESTAMP", want["col_timestamp"])
-			Col_date, _      = gotaface_spanner.ToDBValue("DATE", want["col_date"])
-			Col_json, _      = gotaface_spanner.ToDBValue("JSON", want["col_json"])
-			Col_array, _     = gotaface_spanner.ToDBValue("ARRAY<INT64>", want["col_array"])
+			Col_int, _  = gotaface_sqlite3.ToDBValue("INT", want["col_int"])
+			Col_text, _ = gotaface_sqlite3.ToDBValue("TEXT", want["col_text"])
+			Col_real, _ = gotaface_sqlite3.ToDBValue("REAL", want["col_real"])
+			Col_blob, _ = gotaface_sqlite3.ToDBValue("BLOB", want["col_blob"])
 		)
 		got := test.FindRow[struct {
-			Col_integer   spanner.NullInt64
-			Col_string    spanner.NullString
-			Col_float     spanner.NullFloat64
-			Col_bytes     []byte
-			Col_bool      spanner.NullBool
-			Col_timestamp spanner.NullTime
-			Col_date      spanner.NullDate
-			Col_json      spanner.NullJSON
-			Col_array     []spanner.NullInt64
-		}](t, client.Single(), `t1`, map[string]any{"Col_integer": Col_integer})
+			Col_int  sql.NullInt64
+			Col_text sql.NullString
+			Col_real sql.NullFloat64
+			Col_blob []byte
+		}](t, db, `t1`, map[string]any{"col_int": Col_int})
 		if got == nil {
 			t.Errorf("row not found\n  got = %v\n  want = %v", got, want)
 		}
-		eq := equals(got.Col_integer, Col_integer) &&
-			equals(got.Col_string, Col_string) &&
-			equals(got.Col_float, Col_float) &&
-			equals(got.Col_bytes, Col_bytes) &&
-			equals(got.Col_bool, Col_bool) &&
-			equals(got.Col_timestamp, Col_timestamp) &&
-			equals(got.Col_date, Col_date) &&
-			equals(got.Col_json, Col_json) &&
-			equals(got.Col_array, Col_array)
+		eq := equals(got.Col_int, Col_int) &&
+			equals(got.Col_text, Col_text) &&
+			equals(got.Col_real, Col_real) &&
+			equals(got.Col_blob, Col_blob)
 		if !eq {
 			t.Errorf("row not found\n  got = %v\n  want = %v", got, want)
 		}
@@ -211,22 +178,19 @@ func TestDBInsertFunc_WithSchemaCache(t *testing.T) {
 }
 
 func TestDBInsertFunc_WithoutSchemaCache(t *testing.T) {
-	test.SkipIfNoEnv(t)
+	sqliteTestDir := getEnvSQLiteTestDirOrSkip(t)
 
-	env := test.GetEnvSpanner()
-	database := fmt.Sprintf(`dbinsert_%d`, time.Now().UnixNano())
-	fullDatabase := fmt.Sprintf(`projects/%s/instances/%s/databases/%s`, env.Project, env.Instance, database)
-
-	adminClient, client, tearDown := test.Setup(t, database)
+	dbPath := fmt.Sprintf(`%s/cli_dbinsert_%d.db`, sqliteTestDir, time.Now().UnixNano())
+	db, tearDown := test.Setup(t, dbPath, "")
 	defer tearDown()
 
-	test.InitDDL(t, adminClient, fullDatabase, testDDLs)
+	test.Init(t, db, testInitStmt)
 
 	var schemaReader io.Reader = nil
 	var schemaWriter *bytes.Buffer = bytes.NewBuffer(nil)
 
 	// sut
-	err := dbinsert.DBInsertFunc(context.Background(), "spanner", fullDatabase, schemaReader, schemaWriter, testInput)
+	err := dbinsert.DBInsertFunc(context.Background(), "sqlite3", dbPath, schemaReader, schemaWriter, testInput)
 	if err != nil {
 		t.Errorf(`fail to run: %v`, err)
 	}
@@ -236,52 +200,37 @@ func TestDBInsertFunc_WithoutSchemaCache(t *testing.T) {
 		got := test.FindRow[struct {
 			Id1 int64
 			Id2 int64
-		}](t, client.Single(), `t0`, key)
+		}](t, db, `t0`, key)
 		if got == nil {
 			t.Errorf("row not found\n  got  = %v\n  want = %v", got, want)
 		}
 	}
 	for _, want := range testInput[1].Rows() {
 		var (
-			Col_integer, _   = gotaface_spanner.ToDBValue("INT64", want["col_integer"])
-			Col_string, _    = gotaface_spanner.ToDBValue("STRING(MAX)", want["col_string"])
-			Col_float, _     = gotaface_spanner.ToDBValue("FLOAT64", want["col_float"])
-			Col_bytes, _     = gotaface_spanner.ToDBValue("BYTES(256)", want["col_bytes"])
-			Col_bool, _      = gotaface_spanner.ToDBValue("BOOL", want["col_bool"])
-			Col_timestamp, _ = gotaface_spanner.ToDBValue("TIMESTAMP", want["col_timestamp"])
-			Col_date, _      = gotaface_spanner.ToDBValue("DATE", want["col_date"])
-			Col_json, _      = gotaface_spanner.ToDBValue("JSON", want["col_json"])
-			Col_array, _     = gotaface_spanner.ToDBValue("ARRAY<INT64>", want["col_array"])
+			Col_int, _  = gotaface_sqlite3.ToDBValue("INT", want["col_int"])
+			Col_text, _ = gotaface_sqlite3.ToDBValue("TEXT", want["col_text"])
+			Col_real, _ = gotaface_sqlite3.ToDBValue("REAL", want["col_real"])
+			Col_blob, _ = gotaface_sqlite3.ToDBValue("BLOB", want["col_blob"])
 		)
 		got := test.FindRow[struct {
-			Col_integer   spanner.NullInt64
-			Col_string    spanner.NullString
-			Col_float     spanner.NullFloat64
-			Col_bytes     []byte
-			Col_bool      spanner.NullBool
-			Col_timestamp spanner.NullTime
-			Col_date      spanner.NullDate
-			Col_json      spanner.NullJSON
-			Col_array     []spanner.NullInt64
-		}](t, client.Single(), `t1`, map[string]any{"Col_integer": Col_integer})
+			Col_int  sql.NullInt64
+			Col_text sql.NullString
+			Col_real sql.NullFloat64
+			Col_blob []byte
+		}](t, db, `t1`, map[string]any{"col_int": Col_int})
 		if got == nil {
 			t.Errorf("row not found\n  got = %v\n  want = %v", got, want)
 		}
-		eq := equals(got.Col_integer, Col_integer) &&
-			equals(got.Col_string, Col_string) &&
-			equals(got.Col_float, Col_float) &&
-			equals(got.Col_bytes, Col_bytes) &&
-			equals(got.Col_bool, Col_bool) &&
-			equals(got.Col_timestamp, Col_timestamp) &&
-			equals(got.Col_date, Col_date) &&
-			equals(got.Col_json, Col_json) &&
-			equals(got.Col_array, Col_array)
+		eq := equals(got.Col_int, Col_int) &&
+			equals(got.Col_text, Col_text) &&
+			equals(got.Col_real, Col_real) &&
+			equals(got.Col_blob, Col_blob)
 		if !eq {
 			t.Errorf("row not found\n  got = %v\n  want = %v", got, want)
 		}
 	}
 
-	var gotSchema spanner_schema.Schema
+	var gotSchema sqlite3_schema.Schema
 	if err := json.NewDecoder(schemaWriter).Decode(&gotSchema); err != nil {
 		t.Errorf(`fail to decode schema: %v`, err)
 	}
@@ -306,4 +255,3 @@ func TestDBInsertFunc_WithoutSchemaCache(t *testing.T) {
 		}
 	}
 }
-*/
