@@ -2,7 +2,6 @@ package dbdump
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 
@@ -25,22 +24,9 @@ func DBDumpFunc(ctx context.Context, driver string, dataSource string, schemaRea
 	rtx := client.ReadOnlyTransaction()
 	defer rtx.Close()
 
-	var schema *spanner_schema.Schema
-	if schemaReader == nil {
-		var err error
-		schema, err = spanner_schema.FetchSchema(ctx, rtx)
-		if err != nil {
-			return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
-		}
-
-		if err := json.NewEncoder(schemaWriter).Encode(schema); err != nil {
-			return nil, fmt.Errorf(`fail to encode schema JSON: %w`, err)
-		}
-	} else {
-		schema = new(spanner_schema.Schema)
-		if err := json.NewDecoder(schemaReader).Decode(schema); err != nil {
-			return nil, fmt.Errorf(`fail to decode schema JSON: %w`, err)
-		}
+	schema, err := spanner_schema.FetchSchemaOrUseCache(ctx, schemaReader, schemaWriter, rtx)
+	if err != nil {
+		return nil, fmt.Errorf(`fail to fetch schema or use cache: %w`, err)
 	}
 
 	dumper := spanner_dump.NewDumper(rtx, schema)

@@ -2,7 +2,6 @@ package dbinsert
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 
@@ -13,9 +12,13 @@ import (
 	spanner_insert "github.com/Jumpaku/gotaface/spanner/dml/insert"
 )
 
-type DBInsertInput = []struct {
-	Name string   `json:"name"`
-	Rows dml.Rows `json:"rows"`
+type InsertRows = interface {
+	Name() string
+	Rows() dml.Rows
+}
+type DBInsertInput = interface {
+	Len() int
+	Get(i int) InsertRows
 }
 
 func DBInsertFunc(ctx context.Context, driver string, dataSource string, schemaReader io.Reader, schemaWriter io.Writer, input DBInsertInput) error {
@@ -26,22 +29,9 @@ func DBInsertFunc(ctx context.Context, driver string, dataSource string, schemaR
 	defer client.Close()
 
 	_, err = client.ReadWriteTransaction(ctx, func(ctx context.Context, rwt *spanner.ReadWriteTransaction) error {
-		var schema *spanner_schema.Schema
-		if schemaReader == nil {
-			var err error
-			schema, err = spanner_schema.FetchSchema(ctx, rwt)
-			if err != nil {
-				return fmt.Errorf(`fail to fetch schema: %w`, err)
-			}
-
-			if err := json.NewEncoder(schemaWriter).Encode(schema); err != nil {
-				return fmt.Errorf(`fail to encode schema JSON: %w`, err)
-			}
-		} else {
-			schema = new(spanner_schema.Schema)
-			if err := json.NewDecoder(schemaReader).Decode(schema); err != nil {
-				return fmt.Errorf(`fail to decode schema JSON: %w`, err)
-			}
+		schema, err := spanner_schema.FetchSchemaOrUseCache(ctx, schemaReader, schemaWriter, rwt)
+		if err != nil {
+			return fmt.Errorf(`fail to fetch schema or use cache: %w`, err)
 		}
 
 		tableMap := map[string]spanner_schema.Table{}
@@ -51,24 +41,28 @@ func DBInsertFunc(ctx context.Context, driver string, dataSource string, schemaR
 
 		inserter := spanner_insert.NewInserter(rwt)
 
-		for _, input := range input {
-			table := tableMap[input.Name]
+		for i := 0; i < input.Len(); i++ {
+			input := input.Get(i)
+			table := tableMap[input.Name()]
 			columnMap := map[string]spanner_schema.Column{}
 			for _, column := range table.ColumnsVal {
 				columnMap[column.Name()] = column
 			}
 
 			rows := dml.Rows{}
-			for _, inputRow := range input.Rows {
+			for _, inputRow := range input.Rows() {
 				row := dml.Row{}
 				for column, value := range inputRow {
 					row[column], err = spanner_impl.ToDBValue(columnMap[column].Type(), value)
+					if err != nil {
+						return fmt.Errorf(`fail to convert value to DB value: %v: %w`, value, err)
+					}
 				}
 				rows = append(rows, row)
 			}
-			err := inserter.Insert(ctx, input.Name, rows)
+			err := inserter.Insert(ctx, input.Name(), rows)
 			if err != nil {
-				return fmt.Errorf(`fail to insert rows in table %s: %w`, input.Name, err)
+				return fmt.Errorf(`fail to insert rows in table %s: %w`, input.Name(), err)
 			}
 		}
 

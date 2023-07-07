@@ -13,7 +13,7 @@ import (
 	"os"
 
 	"github.com/Jumpaku/gotaface/dml"
-	//dbinsert_spanner "github.com/Jumpaku/gotaface/spanner/cli/dbdump"
+	dbinsert_spanner "github.com/Jumpaku/gotaface/spanner/cli/dbinsert"
 	//dbinsert_sqlite3 "github.com/Jumpaku/gotaface/sqlite3/cli/dbdump"
 )
 
@@ -57,9 +57,13 @@ func main() {
 	}
 }
 
-type DBInsertInput = []struct {
-	Name string   `json:"name"`
-	Rows dml.Rows `json:"rows"`
+type InsertRows = interface {
+	Name() string
+	Rows() dml.Rows
+}
+type DBInsertInput = interface {
+	Len() int
+	Get(i int) InsertRows
 }
 type DBInsertFunc func(ctx context.Context, driver string, dataSource string, schemaReader io.Reader, schemaWriter io.Writer, input DBInsertInput) error
 
@@ -94,6 +98,27 @@ func LoadSchemaCache(schema string) (io.Reader, error) {
 	return bytes.NewBuffer(b), nil
 }
 
+type dbInsertRows struct {
+	name string   `json:"name"`
+	rows dml.Rows `json:"rows"`
+}
+
+func (r dbInsertRows) Name() string {
+	return r.name
+}
+func (r dbInsertRows) Rows() dml.Rows {
+	return r.rows
+}
+
+type dbInsertInput []dbInsertRows
+
+func (i dbInsertInput) Len() int {
+	return len(i)
+}
+func (i dbInsertInput) Get(index int) InsertRows {
+	return i[index]
+}
+
 func (runner Runner) Run(ctx context.Context, stdin io.Reader, stdout io.Writer) error {
 	var dbInsertFunc DBInsertFunc
 
@@ -101,12 +126,12 @@ func (runner Runner) Run(ctx context.Context, stdin io.Reader, stdout io.Writer)
 	default:
 		return fmt.Errorf(`unsupported driver %s`, runner.driver)
 	case `spanner`:
-		//dbInsertFunc = dbdump_spanner.DBInsertFunc
+		dbInsertFunc = dbinsert_spanner.DBInsertFunc
 	case `sqlite3`:
 		//dbInsertFunc = dbdump_sqlite3.DBInsertFunc
 	}
 
-	var input DBInsertInput
+	var input dbInsertInput
 	d := json.NewDecoder(stdin)
 	d.DisallowUnknownFields()
 	d.UseNumber()

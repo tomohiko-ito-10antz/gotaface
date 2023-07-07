@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"cloud.google.com/go/spanner"
 	"github.com/Jumpaku/gotaface/ddl/schema"
@@ -330,4 +331,25 @@ ORDER BY p.TableName;
 	}
 
 	return parent, foreign, nil
+}
+
+func FetchSchemaOrUseCache(ctx context.Context, schemaReader io.Reader, schemaWriter io.Writer, queryer gotaface_spanner.Queryer) (*Schema, error) {
+	if schemaReader != nil {
+		schema := new(Schema)
+		if err := json.NewDecoder(schemaReader).Decode(schema); err != nil {
+			return nil, fmt.Errorf(`fail to decode schema JSON: %w`, err)
+		}
+		return schema, nil
+	}
+	var err error
+	schema, err := FetchSchema(ctx, queryer)
+	if err != nil {
+		return nil, fmt.Errorf(`fail to fetch schema: %w`, err)
+	}
+
+	if err := json.NewEncoder(schemaWriter).Encode(schema); err != nil {
+		return nil, fmt.Errorf(`fail to encode schema JSON: %w`, err)
+	}
+
+	return schema, nil
 }
