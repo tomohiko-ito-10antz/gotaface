@@ -3,6 +3,7 @@ package wrap
 import (
 	"strconv"
 
+	"github.com/Jumpaku/gotaface/errors"
 	"golang.org/x/exp/slices"
 )
 
@@ -11,9 +12,12 @@ type Key string
 func (e Key) String() string {
 	return string(e)
 }
-func (e Key) Integer() (int, bool) {
+func (e Key) Integer() int {
 	elm, err := strconv.ParseInt(e.String(), 10, 64)
-	return int(elm), err == nil
+	if err != nil {
+		errors.Unexpected("cannot parse %v to int: %w", e, err)
+	}
+	return int(elm)
 }
 
 type Path []Key
@@ -28,14 +32,10 @@ func (k Path) Append(key Key) Path {
 	return Path(append(k, key))
 }
 
-func (k Path) Get(index int) (Key, bool) {
-	if index >= k.Len() {
-		return "", false
-	}
-	if index < 0 {
-		return "", false
-	}
-	return k[index], true
+func (k Path) Get(index int) Key {
+	errors.Assert(0 <= index && index < len(k), "index must be in [0, %d)", len(k))
+
+	return k[index]
 }
 
 func Walk(v JsonValue, visitor func(path Path, val JsonValue) error) error {

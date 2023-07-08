@@ -15,13 +15,8 @@ func TestKey_String(t *testing.T) {
 
 func TestKey_Integer(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
-		v, ok := wrap.Key("123").Integer()
-		assert.Equal(t, ok, true)
+		v := wrap.Key("123").Integer()
 		assert.Equal(t, v, 123)
-	})
-	t.Run("ng", func(t *testing.T) {
-		_, ok := wrap.Key("abc").Integer()
-		assert.Equal(t, ok, false)
 	})
 }
 
@@ -38,18 +33,10 @@ func TestPath_Equals(t *testing.T) {
 
 func TestPath_Get(t *testing.T) {
 	p := wrap.Path([]wrap.Key{"abc", "123"})
-	k0, ok := p.Get(0)
-	assert.Equal(t, ok, true)
+	k0 := p.Get(0)
 	assert.Equal(t, k0, wrap.Key("abc"))
-	k1, ok := p.Get(1)
-	assert.Equal(t, ok, true)
+	k1 := p.Get(1)
 	assert.Equal(t, k1, wrap.Key("123"))
-
-	_, ok = p.Get(2)
-	assert.Equal(t, ok, false)
-	_, ok = p.Get(-1)
-	assert.Equal(t, ok, false)
-
 }
 
 func TestPath_Len(t *testing.T) {
@@ -60,8 +47,7 @@ func TestPath_Len(t *testing.T) {
 func TestPath_Append(t *testing.T) {
 	p := wrap.Path([]wrap.Key{"abc", "123"}).Append("xyz")
 	assert.Equal(t, p.Len(), 3)
-	k1, ok := p.Get(2)
-	assert.Equal(t, ok, true)
+	k1 := p.Get(2)
 	assert.Equal(t, k1, wrap.Key("xyz"))
 }
 
