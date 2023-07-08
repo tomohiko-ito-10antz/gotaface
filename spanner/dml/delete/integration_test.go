@@ -43,16 +43,9 @@ VALUES
 	(2, 1, 1, 'jkl', 2.00, b'211jkl', FALSE, '2023-06-11T01:23:45Z')
 `)})
 
-	_, err := client.ReadWriteTransaction(context.Background(), func(ctx context.Context, tx *spanner.ReadWriteTransaction) error {
-		sut := delete.NewDeleter(tx)
+	sut := delete.NewDeleter(client)
 
-		err := sut.Delete(ctx, `t`)
-		if err != nil {
-			return fmt.Errorf("fail to delete table: %w", err)
-		}
-
-		return nil
-	})
+	err := sut.Delete(context.Background(), `t`)
 	if err != nil {
 		t.Errorf(`fail to delete table: %v`, err)
 	}

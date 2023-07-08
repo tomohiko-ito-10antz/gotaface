@@ -10,17 +10,17 @@ import (
 )
 
 type deleter struct {
-	updater gotaface_spanner.Updater
+	updater gotaface_spanner.PartitionedUpdater
 }
 
 var _ delete.Deleter = deleter{}
 
-func NewDeleter(updater gotaface_spanner.Updater) deleter {
+func NewDeleter(updater gotaface_spanner.PartitionedUpdater) deleter {
 	return deleter{updater: updater}
 }
 
 func (deleter deleter) Delete(ctx context.Context, table string) error {
-	_, err := deleter.updater.Update(ctx, spanner.Statement{SQL: fmt.Sprintf(`DELETE FROM %s WHERE TRUE`, table)})
+	_, err := deleter.updater.PartitionedUpdate(ctx, spanner.Statement{SQL: fmt.Sprintf(`DELETE FROM %s WHERE TRUE`, table)})
 	if err != nil {
 		return fmt.Errorf(`fail to delete table: %w`, err)
 	}

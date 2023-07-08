@@ -7,29 +7,37 @@ import (
 	"strings"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/ddl/schema"
 	"github.com/Jumpaku/gotaface/dml"
 	"github.com/Jumpaku/gotaface/dml/dump"
 	gotaface_spanner "github.com/Jumpaku/gotaface/spanner"
-	schema_impl "github.com/Jumpaku/gotaface/spanner/ddl/schema"
-	"golang.org/x/exp/slices"
+	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
 )
 
 type dumper struct {
-	queryer gotaface_spanner.Queryer
-	schema  schema.Schema
+	queryer  gotaface_spanner.Queryer
+	schema   *spanner_schema.Schema
+	tableMap map[string]spanner_schema.Table
 }
 
 var _ dump.Dumper = dumper{}
 
-func NewDumper(queryer gotaface_spanner.Queryer, schema schema.Schema) dumper {
-	return dumper{queryer: queryer, schema: schema}
+func NewDumper(queryer gotaface_spanner.Queryer, schema *spanner_schema.Schema) dumper {
+	tableMap := map[string]spanner_schema.Table{}
+	for _, table := range schema.TablesVal {
+		tableMap[table.Name()] = table
+	}
+	return dumper{queryer: queryer, schema: schema, tableMap: tableMap}
 }
 
 func (dumper dumper) Dump(ctx context.Context, tableName string) (dml.Rows, error) {
-	table, orderBy, err := dumper.getTableInfo(tableName)
-	if err != nil {
-		return nil, fmt.Errorf(`table not found %#v : %w`, tableName, err)
+	table, ok := dumper.tableMap[tableName]
+	if !ok {
+		return nil, fmt.Errorf(`table %s not found`, tableName)
+	}
+
+	orderBy := []string{}
+	for _, keyIndex := range table.PrimaryKey() {
+		orderBy = append(orderBy, table.Columns()[keyIndex].Name())
 	}
 
 	stmt := spanner.Statement{
@@ -39,10 +47,10 @@ func (dumper dumper) Dump(ctx context.Context, tableName string) (dml.Rows, erro
 	itr := dumper.queryer.Query(ctx, stmt)
 
 	rows := dml.Rows{}
-	err = itr.Do(func(r *spanner.Row) error {
+	err := itr.Do(func(r *spanner.Row) error {
 		row := dml.Row{}
-		for _, column := range table.Columns() {
-			rvPtr := reflect.New(schema_impl.GoType(column))
+		for _, column := range table.ColumnsVal {
+			rvPtr := reflect.New(gotaface_spanner.GoType(column.Type()))
 			err := r.ColumnByName(column.Name(), rvPtr.Interface())
 			if err != nil {
 				return fmt.Errorf(`fail to scan column %s : %w`, column.Name(), err)
@@ -59,20 +67,4 @@ func (dumper dumper) Dump(ctx context.Context, tableName string) (dml.Rows, erro
 	}
 
 	return rows, nil
-}
-
-func (dumper dumper) getTableInfo(tableName string) (schema.Table, []string, error) {
-	tables := dumper.schema.Tables()
-	index := slices.IndexFunc(tables, func(t schema.Table) bool { return t.Name() == tableName })
-	if index < 0 {
-		return nil, nil, fmt.Errorf(`table %s not found`, tableName)
-	}
-	table := tables[index]
-
-	orderBy := []string{}
-	for _, keyIndex := range table.PrimaryKey() {
-		orderBy = append(orderBy, table.Columns()[keyIndex].Name())
-	}
-
-	return table, orderBy, nil
 }

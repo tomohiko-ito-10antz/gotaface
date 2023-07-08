@@ -16,5 +16,6 @@ lint: ## lint
 test: ## test
 	go clean -testcache
 	sh spanner/tools/integration-test.sh
+	sh sqlite3/tools/integration-test.sh
 	go clean -testcache
-	go test ./...
+	go test -cover ./... -coverprofile=cover/cover.out && go tool cover -html=cover/cover.out -o cover/cover.html

@@ -17,6 +17,10 @@ type Updater interface {
 	Update(ctx context.Context, stmt spanner.Statement) (rowCount int64, err error)
 }
 
+type PartitionedUpdater interface {
+	PartitionedUpdate(ctx context.Context, stmt spanner.Statement) (count int64, err error)
+}
+
 func ScanRows[Struct any](itr *spanner.RowIterator) ([]*Struct, error) {
 	var s Struct
 	rv := reflect.ValueOf(&s).Elem()

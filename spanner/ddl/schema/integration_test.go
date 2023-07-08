@@ -102,87 +102,87 @@ CREATE TABLE t9 (
 	wantTables := []schema.Table{
 		schema_impl.Table{
 			NameVal: "t0",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id1", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "id2", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "col_integer", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "col_string", TypeVal: "STRING(MAX)"},
-				schema_impl.Column{NameVal: "col_float", TypeVal: "FLOAT64"},
-				schema_impl.Column{NameVal: "col_bytes", TypeVal: "BYTES(16)"},
-				schema_impl.Column{NameVal: "col_bool", TypeVal: "BOOL"},
-				schema_impl.Column{NameVal: "col_date", TypeVal: "DATE"},
-				schema_impl.Column{NameVal: "col_timestamp", TypeVal: "TIMESTAMP"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id1", TypeVal: "INT64"},
+				{NameVal: "id2", TypeVal: "INT64"},
+				{NameVal: "col_integer", TypeVal: "INT64"},
+				{NameVal: "col_string", TypeVal: "STRING(MAX)"},
+				{NameVal: "col_float", TypeVal: "FLOAT64"},
+				{NameVal: "col_bytes", TypeVal: "BYTES(16)"},
+				{NameVal: "col_bool", TypeVal: "BOOL"},
+				{NameVal: "col_date", TypeVal: "DATE"},
+				{NameVal: "col_timestamp", TypeVal: "TIMESTAMP"},
 			},
 			PrimaryKeyVal: []int{0, 1},
 		},
 		schema_impl.Table{
 			NameVal: "t1",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id", TypeVal: "INT64"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id", TypeVal: "INT64"},
 			},
 			PrimaryKeyVal: []int{0},
 		},
 		schema_impl.Table{
 			NameVal: "t2",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id", TypeVal: "INT64"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id", TypeVal: "INT64"},
 			},
 			PrimaryKeyVal: []int{0},
 		},
 		schema_impl.Table{
 			NameVal: "t3",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "col1", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "col2", TypeVal: "INT64"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id", TypeVal: "INT64"},
+				{NameVal: "col1", TypeVal: "INT64"},
+				{NameVal: "col2", TypeVal: "INT64"},
 			},
 			PrimaryKeyVal: []int{0},
 		},
 		schema_impl.Table{
 			NameVal: "t4",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id1", TypeVal: "INT64"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id1", TypeVal: "INT64"},
 			},
 			PrimaryKeyVal: []int{0},
 		},
 		schema_impl.Table{
 			NameVal: "t5",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id1", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "id2", TypeVal: "INT64"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id1", TypeVal: "INT64"},
+				{NameVal: "id2", TypeVal: "INT64"},
 			},
 			PrimaryKeyVal: []int{0, 1},
 		},
 		schema_impl.Table{
 			NameVal: "t6",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id1", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "id2", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "id3", TypeVal: "INT64"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id1", TypeVal: "INT64"},
+				{NameVal: "id2", TypeVal: "INT64"},
+				{NameVal: "id3", TypeVal: "INT64"},
 			},
 			PrimaryKeyVal: []int{0, 1, 2},
 		},
 		schema_impl.Table{
 			NameVal: "t7",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id1", TypeVal: "INT64"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id1", TypeVal: "INT64"},
 			},
 			PrimaryKeyVal: []int{0},
 		},
 		schema_impl.Table{
 			NameVal: "t8",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id1", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "id2", TypeVal: "INT64"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id1", TypeVal: "INT64"},
+				{NameVal: "id2", TypeVal: "INT64"},
 			},
 			PrimaryKeyVal: []int{0, 1},
 		},
 		schema_impl.Table{
 			NameVal: "t9",
-			ColumnsVal: []schema.Column{
-				schema_impl.Column{NameVal: "id1", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "id2", TypeVal: "INT64"},
-				schema_impl.Column{NameVal: "id3", TypeVal: "INT64"},
+			ColumnsVal: []schema_impl.Column{
+				{NameVal: "id1", TypeVal: "INT64"},
+				{NameVal: "id2", TypeVal: "INT64"},
+				{NameVal: "id3", TypeVal: "INT64"},
 			},
 			PrimaryKeyVal: []int{0, 1, 2},
 		},

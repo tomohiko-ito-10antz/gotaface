@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Jumpaku/gotaface/dml"
-	schema_impl "github.com/Jumpaku/gotaface/spanner/ddl/schema"
+	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
 	"github.com/Jumpaku/gotaface/spanner/dml/dump"
 	"golang.org/x/exp/slices"
 
@@ -46,12 +46,12 @@ VALUES
 	defer tx.Close()
 
 	ctx := context.Background()
-	schema, err := schema_impl.NewFetcher(tx).Fetch(ctx)
+	schema, err := spanner_schema.NewFetcher(tx).Fetch(ctx)
 	if err != nil {
 		t.Fatalf("fail to fetch schema: %v", err)
 	}
 
-	sut := dump.NewDumper(tx, schema)
+	sut := dump.NewDumper(tx, schema.(*spanner_schema.Schema))
 
 	got, err := sut.Dump(context.Background(), `t`)
 	if err != nil {
@@ -117,12 +117,12 @@ VALUES (1, 'abc', 1.25, b'1234abcd', TRUE,  '2023-06-11T01:23:45Z', '2023-06-11'
 	defer tx.Close()
 
 	ctx := context.Background()
-	schema, err := schema_impl.NewFetcher(tx).Fetch(ctx)
+	schema, err := spanner_schema.NewFetcher(tx).Fetch(ctx)
 	if err != nil {
 		t.Fatal("fail to fetch schema: %w", err)
 	}
 
-	sut := dump.NewDumper(tx, schema)
+	sut := dump.NewDumper(tx, schema.(*spanner_schema.Schema))
 
 	got, err := sut.Dump(context.Background(), `u`)
 	if err != nil {
