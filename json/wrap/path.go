@@ -29,7 +29,7 @@ func (k Path) Len() int {
 	return len(k)
 }
 func (k Path) Append(key Key) Path {
-	return Path(append(k, key))
+	return Path(append(append([]Key{}, k...), key))
 }
 
 func (k Path) Get(index int) Key {
