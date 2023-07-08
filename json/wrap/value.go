@@ -1,6 +1,7 @@
 package wrap
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -9,6 +10,25 @@ import (
 )
 
 type JsonType int
+
+func (t JsonType) String() string {
+	switch t {
+	case JsonTypeNull:
+		return `null`
+	case JsonTypeString:
+		return `string`
+	case JsonTypeNumber:
+		return `number`
+	case JsonTypeBoolean:
+		return `boolean`
+	case JsonTypeArray:
+		return `array`
+	case JsonTypeObject:
+		return `object`
+	default:
+		panic("invalid JsonType")
+	}
+}
 
 const (
 	JsonTypeNull JsonType = iota
@@ -29,15 +49,16 @@ type JsonValue interface {
 	StringGet() string
 	BooleanGet() bool
 	ObjectKeys() []string
-	ObjectGetElm(key string) (JsonValue, bool)
+	ObjectHasElm(key string) bool
+	ObjectGetElm(key string) JsonValue
 	ObjectSetElm(key string, v JsonValue)
 	ObjectDelElm(key string)
 	ObjectLen() int
-	ArrayGetElm(index int) (JsonValue, bool)
-	ArraySetElm(index int, v JsonValue) bool
-	ArrayLen() int
+	ArrayGetElm(index int) JsonValue
+	ArraySetElm(index int, v JsonValue)
 	ArrayAddElm(vs ...JsonValue)
-	ArraySlice(begin int, endExclusive int) (JsonValue, bool)
+	ArrayLen() int
+	ArraySlice(begin int, endExclusive int) JsonValue
 }
 
 type jsonValue struct {
@@ -129,16 +150,46 @@ func (v *jsonValue) MarshalJSON() ([]byte, error) {
 	case JsonTypeObject:
 		return json.Marshal(v.jsonObject)
 	default:
-		return errors.Unreachable2[[]byte, error]()
+		return errors.Unexpected2[[]byte, error](`invalid JsonType: %v`, v.Type())
 	}
 }
 
+func fromGo(a any) JsonValue {
+	switch a := a.(type) {
+	case nil:
+		return Null()
+	case json.Number:
+		return Number(a)
+	case string:
+		return String(a)
+	case bool:
+		return Boolean(a)
+	case []any:
+		arr := Array()
+		for _, a := range a {
+			arr.ArrayAddElm(fromGo(a))
+		}
+		return arr
+	case map[string]any:
+		obj := Object()
+		for k, a := range a {
+			obj.ObjectSetElm(k, fromGo(a))
+		}
+		return obj
+	default:
+		return errors.Unexpected1[JsonValue]("unexpected value that cannot be converted to JsonValue: %#v", a)
+	}
+}
 func (v *jsonValue) UnmarshalJSON(b []byte) error {
-	u, err := FromGo(json.RawMessage(b))
-	if err != nil {
+	decoder := json.NewDecoder(bytes.NewBuffer(b))
+	decoder.UseNumber()
+
+	var a any
+	if err := decoder.Decode(&a); err != nil {
 		return fmt.Errorf(`fail to unmarshal value to JsonValue: %w`, err)
 	}
-	v.Assign(u)
+
+	v.Assign(fromGo(a))
 
 	return nil
 }
@@ -153,13 +204,13 @@ func (v *jsonValue) Assign(other JsonValue) {
 		l := other.ArrayLen()
 		v.jsonArray = make([]JsonValue, l)
 		for i := 0; i < l; i++ {
-			v.jsonArray[i], _ = other.ArrayGetElm(i)
+			v.jsonArray[i] = other.ArrayGetElm(i)
 		}
 	case JsonTypeObject:
 		v.jsonObject = map[string]JsonValue{}
 		keys := other.ObjectKeys()
 		for _, k := range keys {
-			v.jsonObject[k], _ = other.ObjectGetElm(k)
+			v.jsonObject[k] = other.ObjectGetElm(k)
 		}
 	case JsonTypeBoolean:
 		v.jsonBoolean = other.BooleanGet()
@@ -175,14 +226,14 @@ func (v *jsonValue) Clone() JsonValue {
 	case JsonTypeArray:
 		clone := Array()
 		for i := 0; i < v.ArrayLen(); i++ {
-			e, _ := v.ArrayGetElm(i)
+			e := v.ArrayGetElm(i)
 			clone.ArrayAddElm(e.Clone())
 		}
 		return clone
 	case JsonTypeObject:
 		clone := Object()
 		for _, k := range v.ObjectKeys() {
-			e, _ := v.ObjectGetElm(k)
+			e := v.ObjectGetElm(k)
 			clone.ObjectSetElm(k, e.Clone())
 		}
 		return clone
@@ -195,7 +246,7 @@ func (v *jsonValue) Clone() JsonValue {
 	case JsonTypeNull:
 		return Null()
 	default:
-		return errors.Unreachable[JsonValue]()
+		return errors.Unexpected1[JsonValue](`invalid JsonType: %v`, v.Type())
 	}
 }
 
@@ -224,12 +275,18 @@ func (v *jsonValue) ObjectKeys() []string {
 
 	return keys
 }
-func (v *jsonValue) ObjectGetElm(key string) (JsonValue, bool) {
+func (v *jsonValue) ObjectHasElm(key string) bool {
 	errors.Assert(v.Type() == JsonTypeObject, "JsonValue must be JSON object")
 
-	val, ok := v.jsonObject[key]
+	_, ok := v.jsonObject[key]
 
-	return val, ok
+	return ok
+}
+func (v *jsonValue) ObjectGetElm(key string) JsonValue {
+	errors.Assert(v.Type() == JsonTypeObject, "JsonValue must be JSON object")
+	errors.Assert(v.ObjectHasElm(key), "JsonValue object must have key: %v", key)
+
+	return v.jsonObject[key]
 }
 func (v *jsonValue) ObjectSetElm(key string, val JsonValue) {
 	errors.Assert(v.Type() == JsonTypeObject, "JsonValue must be JSON object")
@@ -247,25 +304,17 @@ func (v *jsonValue) ObjectLen() int {
 
 	return len(v.jsonObject)
 }
-func (v *jsonValue) ArrayGetElm(index int) (JsonValue, bool) {
+func (v *jsonValue) ArrayGetElm(index int) JsonValue {
 	errors.Assert(v.Type() == JsonTypeArray, "JsonValue must be JSON array")
+	errors.Assert(0 <= index && index < v.ArrayLen(), "index must be in [0, %d)", v.ArrayLen())
 
-	if index < 0 || index >= v.ArrayLen() {
-		return nil, false
-	}
-
-	return v.jsonArray[index], true
+	return v.jsonArray[index]
 }
-func (v *jsonValue) ArraySetElm(index int, val JsonValue) bool {
+func (v *jsonValue) ArraySetElm(index int, val JsonValue) {
 	errors.Assert(v.Type() == JsonTypeArray, "JsonValue must be JSON array")
-
-	if index < 0 || index >= v.ArrayLen() {
-		return false
-	}
+	errors.Assert(0 <= index && index < v.ArrayLen(), "index must be in [0, %d)", v.ArrayLen())
 
 	v.jsonArray[index] = val
-
-	return true
 }
 func (v *jsonValue) ArrayLen() int {
 	errors.Assert(v.Type() == JsonTypeArray, "JsonValue must be JSON array")
@@ -277,16 +326,11 @@ func (v *jsonValue) ArrayAddElm(vals ...JsonValue) {
 
 	v.jsonArray = append(v.jsonArray, vals...)
 }
-func (v *jsonValue) ArraySlice(begin int, endExclusive int) (JsonValue, bool) {
+func (v *jsonValue) ArraySlice(begin int, endExclusive int) JsonValue {
 	errors.Assert(v.Type() == JsonTypeArray, "JsonValue must be JSON array")
+	errors.Assert(0 <= begin && begin <= v.ArrayLen(), "begin %v must be in [0, %d]", begin, v.ArrayLen())
+	errors.Assert(0 <= endExclusive && endExclusive <= v.ArrayLen(), "endExclusive %v must be in [0, %d]", endExclusive, v.ArrayLen())
+	errors.Assert(begin <= endExclusive, "begin %v and endExclusive %v must be begin <= endExclusive", begin, endExclusive)
 
-	if begin < 0 || begin >= v.ArrayLen() {
-		return nil, false
-	}
-
-	if endExclusive < begin || endExclusive > v.ArrayLen() {
-		return nil, false
-	}
-
-	return Array(v.jsonArray[begin:endExclusive]...), true
+	return Array(v.jsonArray[begin:endExclusive]...)
 }
