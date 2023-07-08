@@ -1,6 +1,7 @@
 package wrap
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -153,12 +154,42 @@ func (v *jsonValue) MarshalJSON() ([]byte, error) {
 	}
 }
 
+func fromGo(a any) JsonValue {
+	switch a := a.(type) {
+	case nil:
+		return Null()
+	case json.Number:
+		return Number(a)
+	case string:
+		return String(a)
+	case bool:
+		return Boolean(a)
+	case []any:
+		arr := Array()
+		for _, a := range a {
+			arr.ArrayAddElm(fromGo(a))
+		}
+		return arr
+	case map[string]any:
+		obj := Object()
+		for k, a := range a {
+			obj.ObjectSetElm(k, fromGo(a))
+		}
+		return obj
+	default:
+		return errors.Unexpected1[JsonValue]("unexpected value that cannot be converted to JsonValue: %#v", a)
+	}
+}
 func (v *jsonValue) UnmarshalJSON(b []byte) error {
-	u, err := FromGo(json.RawMessage(b))
-	if err != nil {
+	decoder := json.NewDecoder(bytes.NewBuffer(b))
+	decoder.UseNumber()
+
+	var a any
+	if err := decoder.Decode(&a); err != nil {
 		return fmt.Errorf(`fail to unmarshal value to JsonValue: %w`, err)
 	}
-	v.Assign(u)
+
+	v.Assign(fromGo(a))
 
 	return nil
 }
