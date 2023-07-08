@@ -10,6 +10,25 @@ import (
 
 type JsonType int
 
+func (t JsonType) String() string {
+	switch t {
+	case JsonTypeNull:
+		return `null`
+	case JsonTypeString:
+		return `string`
+	case JsonTypeNumber:
+		return `number`
+	case JsonTypeBoolean:
+		return `boolean`
+	case JsonTypeArray:
+		return `array`
+	case JsonTypeObject:
+		return `object`
+	default:
+		panic("invalid JsonType")
+	}
+}
+
 const (
 	JsonTypeNull JsonType = iota
 	JsonTypeString
@@ -129,7 +148,7 @@ func (v *jsonValue) MarshalJSON() ([]byte, error) {
 	case JsonTypeObject:
 		return json.Marshal(v.jsonObject)
 	default:
-		return errors.Unreachable2[[]byte, error]()
+		return errors.Unexpected2[[]byte, error](`invalid JsonType: %v`, v.Type())
 	}
 }
 
@@ -195,7 +214,7 @@ func (v *jsonValue) Clone() JsonValue {
 	case JsonTypeNull:
 		return Null()
 	default:
-		return errors.Unreachable[JsonValue]()
+		return errors.Unexpected1[JsonValue](`invalid JsonType: %v`, v.Type())
 	}
 }
 

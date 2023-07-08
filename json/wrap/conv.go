@@ -35,7 +35,7 @@ func ToGo(v JsonValue) any {
 		}
 		return m
 	default:
-		return errors.Unreachable[any]()
+		return errors.Unexpected1[any](`invalid JsonType: %v`, v.Type())
 	}
 }
 
