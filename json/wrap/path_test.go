@@ -15,13 +15,8 @@ func TestKey_String(t *testing.T) {
 
 func TestKey_Integer(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
-		v, ok := wrap.Key("123").Integer()
-		assert.Equal(t, ok, true)
+		v := wrap.Key("123").Integer()
 		assert.Equal(t, v, 123)
-	})
-	t.Run("ng", func(t *testing.T) {
-		_, ok := wrap.Key("abc").Integer()
-		assert.Equal(t, ok, false)
 	})
 }
 
@@ -38,18 +33,10 @@ func TestPath_Equals(t *testing.T) {
 
 func TestPath_Get(t *testing.T) {
 	p := wrap.Path([]wrap.Key{"abc", "123"})
-	k0, ok := p.Get(0)
-	assert.Equal(t, ok, true)
+	k0 := p.Get(0)
 	assert.Equal(t, k0, wrap.Key("abc"))
-	k1, ok := p.Get(1)
-	assert.Equal(t, ok, true)
+	k1 := p.Get(1)
 	assert.Equal(t, k1, wrap.Key("123"))
-
-	_, ok = p.Get(2)
-	assert.Equal(t, ok, false)
-	_, ok = p.Get(-1)
-	assert.Equal(t, ok, false)
-
 }
 
 func TestPath_Len(t *testing.T) {
@@ -60,8 +47,7 @@ func TestPath_Len(t *testing.T) {
 func TestPath_Append(t *testing.T) {
 	p := wrap.Path([]wrap.Key{"abc", "123"}).Append("xyz")
 	assert.Equal(t, p.Len(), 3)
-	k1, ok := p.Get(2)
-	assert.Equal(t, ok, true)
+	k1 := p.Get(2)
 	assert.Equal(t, k1, wrap.Key("xyz"))
 }
 
@@ -83,10 +69,26 @@ func TestWalk(t *testing.T) {
 		assert.Equal(t, len(p), 1)
 	})
 	t.Run(`object`, func(t *testing.T) {
-		v, _ := wrap.FromGo(map[string]any{
-			"a": nil,
-			"b": map[string]any{"x": nil, "y": map[string]any{"w": nil}, "z": []any{nil}},
-			"c": []any{nil, map[string]any{"w": nil}, []any{nil}},
+		v := wrap.Object(map[string]wrap.JsonValue{
+			"a": wrap.Null(),
+			"b": wrap.Object(map[string]wrap.JsonValue{
+				"x": wrap.Null(),
+				"y": wrap.Object(map[string]wrap.JsonValue{
+					"w": wrap.Null(),
+				}),
+				"z": wrap.Array(
+					wrap.Null(),
+				),
+			}),
+			"c": wrap.Array(
+				wrap.Null(),
+				wrap.Object(map[string]wrap.JsonValue{
+					"w": wrap.Null(),
+				}),
+				wrap.Array(
+					wrap.Null(),
+				),
+			),
 		})
 		p := []wrap.Path{}
 		_ = wrap.Walk(v, func(path wrap.Path, val wrap.JsonValue) error {
@@ -96,11 +98,27 @@ func TestWalk(t *testing.T) {
 		assert.Equal(t, len(p), 14)
 	})
 	t.Run(`array`, func(t *testing.T) {
-		v, _ := wrap.FromGo([]any{
-			nil,
-			map[string]any{"x": nil, "y": map[string]any{"w": nil}, "z": []any{nil}},
-			[]any{nil, map[string]any{"w": nil}, []any{nil}},
-		})
+		v := wrap.Array(
+			wrap.Null(),
+			wrap.Object(map[string]wrap.JsonValue{
+				"x": wrap.Null(),
+				"y": wrap.Object(map[string]wrap.JsonValue{
+					"w": wrap.Null(),
+				}),
+				"z": wrap.Array(
+					wrap.Null(),
+				),
+			}),
+			wrap.Array(
+				wrap.Null(),
+				wrap.Object(map[string]wrap.JsonValue{
+					"w": wrap.Null(),
+				}),
+				wrap.Array(
+					wrap.Null(),
+				),
+			),
+		)
 		p := []wrap.Path{}
 		_ = wrap.Walk(v, func(path wrap.Path, val wrap.JsonValue) error {
 			p = append(p, path)
@@ -117,20 +135,52 @@ func TestFind(t *testing.T) {
 			assert.Equal(t, ok, false)
 		})
 		t.Run(`object`, func(t *testing.T) {
-			v, _ := wrap.FromGo(map[string]any{
-				"a": nil,
-				"b": map[string]any{"x": nil, "y": map[string]any{"w": nil}, "z": []any{nil}},
-				"c": []any{nil, map[string]any{"w": nil}, []any{nil}},
+			v := wrap.Object(map[string]wrap.JsonValue{
+				"a": wrap.Null(),
+				"b": wrap.Object(map[string]wrap.JsonValue{
+					"x": wrap.Null(),
+					"y": wrap.Object(map[string]wrap.JsonValue{
+						"w": wrap.Null(),
+					}),
+					"z": wrap.Array(
+						wrap.Null(),
+					),
+				}),
+				"c": wrap.Array(
+					wrap.Null(),
+					wrap.Object(map[string]wrap.JsonValue{
+						"w": wrap.Null(),
+					}),
+					wrap.Array(
+						wrap.Null(),
+					),
+				),
 			})
 			_, ok := wrap.Find(v, wrap.Path{"xxx"})
 			assert.Equal(t, ok, false)
 		})
 		t.Run(`array`, func(t *testing.T) {
-			v, _ := wrap.FromGo([]any{
-				nil,
-				map[string]any{"x": nil, "y": map[string]any{"w": nil}, "z": []any{nil}},
-				[]any{nil, map[string]any{"w": nil}, []any{nil}},
-			})
+			v := wrap.Array(
+				wrap.Null(),
+				wrap.Object(map[string]wrap.JsonValue{
+					"x": wrap.Null(),
+					"y": wrap.Object(map[string]wrap.JsonValue{
+						"w": wrap.Null(),
+					}),
+					"z": wrap.Array(
+						wrap.Null(),
+					),
+				}),
+				wrap.Array(
+					wrap.Null(),
+					wrap.Object(map[string]wrap.JsonValue{
+						"w": wrap.Null(),
+					}),
+					wrap.Array(
+						wrap.Null(),
+					),
+				),
+			)
 			_, ok := wrap.Find(v, wrap.Path{"xxx"})
 			assert.Equal(t, ok, false)
 		})
@@ -142,10 +192,26 @@ func TestFind(t *testing.T) {
 		assert.Equal(t, a.Type(), wrap.JsonTypeNull)
 	})
 	t.Run(`object`, func(t *testing.T) {
-		v, _ := wrap.FromGo(map[string]any{
-			"a": nil,
-			"b": map[string]any{"x": nil, "y": map[string]any{"w": nil}, "z": []any{nil}},
-			"c": []any{nil, map[string]any{"w": nil}, []any{nil}},
+		v := wrap.Object(map[string]wrap.JsonValue{
+			"a": wrap.Null(),
+			"b": wrap.Object(map[string]wrap.JsonValue{
+				"x": wrap.Null(),
+				"y": wrap.Object(map[string]wrap.JsonValue{
+					"w": wrap.Null(),
+				}),
+				"z": wrap.Array(
+					wrap.Null(),
+				),
+			}),
+			"c": wrap.Array(
+				wrap.Null(),
+				wrap.Object(map[string]wrap.JsonValue{
+					"w": wrap.Null(),
+				}),
+				wrap.Array(
+					wrap.Null(),
+				),
+			),
 		})
 		t.Run(".", func(t *testing.T) {
 			a, ok := wrap.Find(v, wrap.Path{})
@@ -219,11 +285,27 @@ func TestFind(t *testing.T) {
 		})
 	})
 	t.Run(`array`, func(t *testing.T) {
-		v, _ := wrap.FromGo([]any{
-			nil,
-			map[string]any{"x": nil, "y": map[string]any{"w": nil}, "z": []any{nil}},
-			[]any{nil, map[string]any{"w": nil}, []any{nil}},
-		})
+		v := wrap.Array(
+			wrap.Null(),
+			wrap.Object(map[string]wrap.JsonValue{
+				"x": wrap.Null(),
+				"y": wrap.Object(map[string]wrap.JsonValue{
+					"w": wrap.Null(),
+				}),
+				"z": wrap.Array(
+					wrap.Null(),
+				),
+			}),
+			wrap.Array(
+				wrap.Null(),
+				wrap.Object(map[string]wrap.JsonValue{
+					"w": wrap.Null(),
+				}),
+				wrap.Array(
+					wrap.Null(),
+				),
+			),
+		)
 		t.Run(".", func(t *testing.T) {
 			a, ok := wrap.Find(v, wrap.Path{})
 			assert.Equal(t, ok, true)
