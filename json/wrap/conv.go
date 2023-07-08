@@ -22,7 +22,7 @@ func ToGo(v JsonValue) any {
 		l := v.ArrayLen()
 		a := make([]any, l)
 		for i := 0; i < l; i++ {
-			val, _ := v.ArrayGetElm(i)
+			val := v.ArrayGetElm(i)
 			a[i] = ToGo(val)
 		}
 		return a
@@ -30,7 +30,7 @@ func ToGo(v JsonValue) any {
 		m := map[string]any{}
 		keys := v.ObjectKeys()
 		for _, key := range keys {
-			val, _ := v.ObjectGetElm(key)
+			val := v.ObjectGetElm(key)
 			m[key] = ToGo(val)
 		}
 		return m

@@ -223,38 +223,32 @@ func TestObjectGetElm(t *testing.T) {
 	})
 
 	t.Run("get null", func(t *testing.T) {
-		v, ok := o.ObjectGetElm("a")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("a")
 		assert.Equal(t, v.Type(), wrap.JsonTypeNull)
 	})
 
 	t.Run("get number", func(t *testing.T) {
-		v, ok := o.ObjectGetElm("b")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("b")
 		assert.Equal(t, v.Type(), wrap.JsonTypeNumber)
 	})
 
 	t.Run("get string", func(t *testing.T) {
-		v, ok := o.ObjectGetElm("c")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("c")
 		assert.Equal(t, v.Type(), wrap.JsonTypeString)
 	})
 
 	t.Run("get boolean", func(t *testing.T) {
-		v, ok := o.ObjectGetElm("d")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("d")
 		assert.Equal(t, v.Type(), wrap.JsonTypeBoolean)
 	})
 
 	t.Run("get object", func(t *testing.T) {
-		v, ok := o.ObjectGetElm("e")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("e")
 		assert.Equal(t, v.Type(), wrap.JsonTypeObject)
 	})
 
 	t.Run("get array", func(t *testing.T) {
-		v, ok := o.ObjectGetElm("f")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("f")
 		assert.Equal(t, v.Type(), wrap.JsonTypeArray)
 	})
 }
@@ -263,48 +257,42 @@ func TestObjectSetElm(t *testing.T) {
 	t.Run("set null", func(t *testing.T) {
 		o := wrap.Object()
 		o.ObjectSetElm("a", wrap.Null())
-		v, ok := o.ObjectGetElm("a")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("a")
 		assert.Equal(t, v.Type(), wrap.JsonTypeNull)
 	})
 
 	t.Run("set number", func(t *testing.T) {
 		o := wrap.Object()
 		o.ObjectSetElm("b", wrap.Number(123))
-		v, ok := o.ObjectGetElm("b")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("b")
 		assert.Equal(t, v.Type(), wrap.JsonTypeNumber)
 	})
 
 	t.Run("set string", func(t *testing.T) {
 		o := wrap.Object()
 		o.ObjectSetElm("c", wrap.String("abc"))
-		v, ok := o.ObjectGetElm("c")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("c")
 		assert.Equal(t, v.Type(), wrap.JsonTypeString)
 	})
 
 	t.Run("set boolean", func(t *testing.T) {
 		o := wrap.Object()
 		o.ObjectSetElm("d", wrap.Boolean(true))
-		v, ok := o.ObjectGetElm("d")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("d")
 		assert.Equal(t, v.Type(), wrap.JsonTypeBoolean)
 	})
 
 	t.Run("set object", func(t *testing.T) {
 		o := wrap.Object()
 		o.ObjectSetElm("e", wrap.Object())
-		v, ok := o.ObjectGetElm("e")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("e")
 		assert.Equal(t, v.Type(), wrap.JsonTypeObject)
 	})
 
 	t.Run("set array", func(t *testing.T) {
 		o := wrap.Object()
 		o.ObjectSetElm("f", wrap.Array())
-		v, ok := o.ObjectGetElm("f")
-		assert.Equal(t, ok, true)
+		v := o.ObjectGetElm("f")
 		assert.Equal(t, v.Type(), wrap.JsonTypeArray)
 	})
 }
@@ -313,42 +301,42 @@ func TestObjectDelElm(t *testing.T) {
 	t.Run("delete null", func(t *testing.T) {
 		o := wrap.Object(map[string]wrap.JsonValue{"a": wrap.Null()})
 		o.ObjectDelElm("a")
-		_, ok := o.ObjectGetElm("a")
+		ok := o.ObjectHasElm("a")
 		assert.Equal(t, ok, false)
 	})
 
 	t.Run("delete number", func(t *testing.T) {
 		o := wrap.Object(map[string]wrap.JsonValue{"b": wrap.Number(123)})
 		o.ObjectDelElm("b")
-		_, ok := o.ObjectGetElm("b")
+		ok := o.ObjectHasElm("b")
 		assert.Equal(t, ok, false)
 	})
 
 	t.Run("delete string", func(t *testing.T) {
 		o := wrap.Object(map[string]wrap.JsonValue{"c": wrap.String("abc")})
 		o.ObjectDelElm("c")
-		_, ok := o.ObjectGetElm("c")
+		ok := o.ObjectHasElm("c")
 		assert.Equal(t, ok, false)
 	})
 
 	t.Run("delete boolean", func(t *testing.T) {
 		o := wrap.Object(map[string]wrap.JsonValue{"d": wrap.Boolean(true)})
 		o.ObjectDelElm("d")
-		_, ok := o.ObjectGetElm("d")
+		ok := o.ObjectHasElm("d")
 		assert.Equal(t, ok, false)
 	})
 
 	t.Run("delete object", func(t *testing.T) {
 		o := wrap.Object(map[string]wrap.JsonValue{"e": wrap.Object()})
 		o.ObjectDelElm("e")
-		_, ok := o.ObjectGetElm("e")
+		ok := o.ObjectHasElm("e")
 		assert.Equal(t, ok, false)
 	})
 
 	t.Run("delete array", func(t *testing.T) {
 		o := wrap.Object(map[string]wrap.JsonValue{"f": wrap.Array()})
 		o.ObjectDelElm("f")
-		_, ok := o.ObjectGetElm("f")
+		ok := o.ObjectHasElm("f")
 		assert.Equal(t, ok, false)
 	})
 }
@@ -377,38 +365,32 @@ func TestArrayGetElm(t *testing.T) {
 	)
 
 	t.Run("get null", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(0)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(0)
 		assert.Equal(t, v.Type(), wrap.JsonTypeNull)
 	})
 
 	t.Run("get number", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(1)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(1)
 		assert.Equal(t, v.Type(), wrap.JsonTypeNumber)
 	})
 
 	t.Run("get string", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(2)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(2)
 		assert.Equal(t, v.Type(), wrap.JsonTypeString)
 	})
 
 	t.Run("get boolean", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(3)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(3)
 		assert.Equal(t, v.Type(), wrap.JsonTypeBoolean)
 	})
 
 	t.Run("get object", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(4)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(4)
 		assert.Equal(t, v.Type(), wrap.JsonTypeObject)
 	})
 
 	t.Run("get array", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(5)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(5)
 		assert.Equal(t, v.Type(), wrap.JsonTypeArray)
 	})
 }
@@ -423,55 +405,43 @@ func newExampleArray(n int, v wrap.JsonValue) wrap.JsonValue {
 func TestArraySetElm(t *testing.T) {
 	t.Run("get null", func(t *testing.T) {
 		o := newExampleArray(6, wrap.Array())
-		ok := o.ArraySetElm(0, wrap.Null())
-		assert.Equal(t, ok, true)
-		v, ok := o.ArrayGetElm(0)
-		assert.Equal(t, ok, true)
+		o.ArraySetElm(0, wrap.Null())
+		v := o.ArrayGetElm(0)
 		assert.Equal(t, v.Type(), wrap.JsonTypeNull)
 	})
 
 	t.Run("get number", func(t *testing.T) {
 		o := newExampleArray(6, wrap.Null())
-		ok := o.ArraySetElm(1, wrap.Number(123))
-		assert.Equal(t, ok, true)
-		v, ok := o.ArrayGetElm(1)
-		assert.Equal(t, ok, true)
+		o.ArraySetElm(1, wrap.Number(123))
+		v := o.ArrayGetElm(1)
 		assert.Equal(t, v.Type(), wrap.JsonTypeNumber)
 	})
 
 	t.Run("get string", func(t *testing.T) {
 		o := newExampleArray(6, wrap.Null())
-		ok := o.ArraySetElm(2, wrap.String("abc"))
-		assert.Equal(t, ok, true)
-		v, ok := o.ArrayGetElm(2)
-		assert.Equal(t, ok, true)
+		o.ArraySetElm(2, wrap.String("abc"))
+		v := o.ArrayGetElm(2)
 		assert.Equal(t, v.Type(), wrap.JsonTypeString)
 	})
 
 	t.Run("get boolean", func(t *testing.T) {
 		o := newExampleArray(6, wrap.Null())
-		ok := o.ArraySetElm(3, wrap.Boolean(true))
-		assert.Equal(t, ok, true)
-		v, ok := o.ArrayGetElm(3)
-		assert.Equal(t, ok, true)
+		o.ArraySetElm(3, wrap.Boolean(true))
+		v := o.ArrayGetElm(3)
 		assert.Equal(t, v.Type(), wrap.JsonTypeBoolean)
 	})
 
 	t.Run("get object", func(t *testing.T) {
 		o := newExampleArray(6, wrap.Null())
-		ok := o.ArraySetElm(4, wrap.Object())
-		assert.Equal(t, ok, true)
-		v, ok := o.ArrayGetElm(4)
-		assert.Equal(t, ok, true)
+		o.ArraySetElm(4, wrap.Object())
+		v := o.ArrayGetElm(4)
 		assert.Equal(t, v.Type(), wrap.JsonTypeObject)
 	})
 
 	t.Run("get array", func(t *testing.T) {
 		o := newExampleArray(6, wrap.Null())
-		ok := o.ArraySetElm(5, wrap.Array())
-		assert.Equal(t, ok, true)
-		v, ok := o.ArrayGetElm(5)
-		assert.Equal(t, ok, true)
+		o.ArraySetElm(5, wrap.Array())
+		v := o.ArrayGetElm(5)
 		assert.Equal(t, v.Type(), wrap.JsonTypeArray)
 	})
 }
@@ -500,38 +470,32 @@ func TestArrayAddElm(t *testing.T) {
 	o.ArrayAddElm(wrap.Array())
 
 	t.Run("get null", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(0)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(0)
 		assert.Equal(t, v.Type(), wrap.JsonTypeNull)
 	})
 
 	t.Run("get number", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(1)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(1)
 		assert.Equal(t, v.Type(), wrap.JsonTypeNumber)
 	})
 
 	t.Run("get string", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(2)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(2)
 		assert.Equal(t, v.Type(), wrap.JsonTypeString)
 	})
 
 	t.Run("get boolean", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(3)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(3)
 		assert.Equal(t, v.Type(), wrap.JsonTypeBoolean)
 	})
 
 	t.Run("get object", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(4)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(4)
 		assert.Equal(t, v.Type(), wrap.JsonTypeObject)
 	})
 
 	t.Run("get array", func(t *testing.T) {
-		v, ok := o.ArrayGetElm(5)
-		assert.Equal(t, ok, true)
+		v := o.ArrayGetElm(5)
 		assert.Equal(t, v.Type(), wrap.JsonTypeArray)
 	})
 }
@@ -547,20 +511,17 @@ func TestArraySlice(t *testing.T) {
 	)
 
 	t.Run("whole", func(t *testing.T) {
-		a, ok := o.ArraySlice(0, o.ArrayLen())
-		assert.Equal(t, ok, true)
+		a := o.ArraySlice(0, o.ArrayLen())
 		assert.Equal(t, a.ArrayLen(), 6)
 	})
 
 	t.Run("empty", func(t *testing.T) {
-		a, ok := o.ArraySlice(3, 3)
-		assert.Equal(t, ok, true)
+		a := o.ArraySlice(3, 3)
 		assert.Equal(t, a.ArrayLen(), 0)
 	})
 
 	t.Run("sub-array", func(t *testing.T) {
-		a, ok := o.ArraySlice(2, 4)
-		assert.Equal(t, ok, true)
+		a := o.ArraySlice(2, 4)
 		assert.Equal(t, a.ArrayLen(), 2)
 	})
 }

@@ -49,14 +49,14 @@ func walkImpl(parentKey Path, val JsonValue, walkFunc func(key Path, val JsonVal
 	switch val.Type() {
 	case JsonTypeObject:
 		for _, key := range val.ObjectKeys() {
-			val, _ := val.ObjectGetElm(key)
+			val := val.ObjectGetElm(key)
 			if err := walkImpl(parentKey.Append(Key(key)), val, walkFunc); err != nil {
 				return err
 			}
 		}
 	case JsonTypeArray:
 		for i := 0; i < val.ArrayLen(); i++ {
-			val, _ := val.ArrayGetElm(i)
+			val := val.ArrayGetElm(i)
 			if err := walkImpl(parentKey.Append(Key(strconv.FormatInt(int64(i), 10))), val, walkFunc); err != nil {
 				return err
 			}
