@@ -12,6 +12,9 @@ require (
 require (
 	cloud.google.com/go/iam v0.13.0 // indirect
 	cloud.google.com/go/longrunning v0.4.1 // indirect
+	github.com/Jumpaku/go-assert v1.0.0 // indirect
+	github.com/samber/lo v1.38.1 // indirect
+	github.com/thoas/go-funk v0.9.3 // indirect
 	google.golang.org/api v0.125.0 // indirect
 )
 

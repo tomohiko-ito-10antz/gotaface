@@ -9,9 +9,9 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 
-	"github.com/Jumpaku/gotaface/ddl/schema"
-	schema_impl "github.com/Jumpaku/gotaface/spanner/ddl/schema"
-	spanner_test "github.com/Jumpaku/gotaface/spanner/test"
+	"github.com/Jumpaku/gotaface/old/ddl/schema"
+	schema_impl "github.com/Jumpaku/gotaface/old/spanner/ddl/schema"
+	spanner_test "github.com/Jumpaku/gotaface/old/spanner/test"
 
 	"golang.org/x/exp/slices"
 )

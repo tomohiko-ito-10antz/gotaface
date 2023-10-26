@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Jumpaku/gotaface/dml"
-	sqlite3_schema "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
-	sqlite3_dump "github.com/Jumpaku/gotaface/sqlite3/dml/dump"
+	"github.com/Jumpaku/gotaface/old/dml"
+	sqlite3_schema "github.com/Jumpaku/gotaface/old/sqlite3/ddl/schema"
+	sqlite3_dump "github.com/Jumpaku/gotaface/old/sqlite3/dml/dump"
 )
 
 type DBDumpInput = []string

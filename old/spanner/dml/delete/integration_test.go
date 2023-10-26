@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jumpaku/gotaface/spanner/dml/delete"
-	spanner_test "github.com/Jumpaku/gotaface/spanner/test"
+	"github.com/Jumpaku/gotaface/old/spanner/dml/delete"
+	spanner_test "github.com/Jumpaku/gotaface/old/spanner/test"
 
 	"cloud.google.com/go/spanner"
 )

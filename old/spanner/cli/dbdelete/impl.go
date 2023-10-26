@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/spanner"
-	spanner_delete "github.com/Jumpaku/gotaface/spanner/dml/delete"
+	spanner_delete "github.com/Jumpaku/gotaface/old/spanner/dml/delete"
 )
 
 type DBDeleteInput = []string

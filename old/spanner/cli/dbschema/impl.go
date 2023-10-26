@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/ddl/schema"
-	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/ddl/schema"
+	spanner_schema "github.com/Jumpaku/gotaface/old/spanner/ddl/schema"
 )
 
 type DBSchemaOutput = interface {

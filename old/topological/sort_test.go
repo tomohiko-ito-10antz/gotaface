@@ -3,8 +3,8 @@ package topological_test
 import (
 	"testing"
 
-	"github.com/Jumpaku/gotaface/test/assert"
-	"github.com/Jumpaku/gotaface/topological"
+	"github.com/Jumpaku/gotaface/old/test/assert"
+	"github.com/Jumpaku/gotaface/old/topological"
 	"golang.org/x/exp/slices"
 )
 

@@ -10,9 +10,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/Jumpaku/gotaface/ddl/schema"
-	dbschema_spanner "github.com/Jumpaku/gotaface/spanner/cli/dbschema"
-	dbschema_sqlite3 "github.com/Jumpaku/gotaface/sqlite3/cli/dbschema"
+	"github.com/Jumpaku/gotaface/old/ddl/schema"
+	dbschema_spanner "github.com/Jumpaku/gotaface/old/spanner/cli/dbschema"
+	dbschema_sqlite3 "github.com/Jumpaku/gotaface/old/sqlite3/cli/dbschema"
 )
 
 //go:embed README.md

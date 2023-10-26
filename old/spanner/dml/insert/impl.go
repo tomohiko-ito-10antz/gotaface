@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/dml"
-	"github.com/Jumpaku/gotaface/dml/insert"
-	spanner_impl "github.com/Jumpaku/gotaface/spanner"
+	"github.com/Jumpaku/gotaface/old/dml"
+	"github.com/Jumpaku/gotaface/old/dml/insert"
+	spanner_impl "github.com/Jumpaku/gotaface/old/spanner"
 )
 
 type inserter struct {

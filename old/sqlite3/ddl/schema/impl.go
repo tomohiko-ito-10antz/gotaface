@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Jumpaku/gotaface/dbsql"
-	"github.com/Jumpaku/gotaface/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/dbsql"
+	"github.com/Jumpaku/gotaface/old/ddl/schema"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/exp/slices"
 )

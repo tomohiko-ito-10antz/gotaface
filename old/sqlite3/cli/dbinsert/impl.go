@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/Jumpaku/gotaface/dml"
-	gotaface_sqlite3 "github.com/Jumpaku/gotaface/sqlite3"
-	sqlite3_schema "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
-	sqlite3_insert "github.com/Jumpaku/gotaface/sqlite3/dml/insert"
+	"github.com/Jumpaku/gotaface/old/dml"
+	gotaface_sqlite3 "github.com/Jumpaku/gotaface/old/sqlite3"
+	sqlite3_schema "github.com/Jumpaku/gotaface/old/sqlite3/ddl/schema"
+	sqlite3_insert "github.com/Jumpaku/gotaface/old/sqlite3/dml/insert"
 )
 
 type InsertRows = interface {

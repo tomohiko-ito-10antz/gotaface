@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Jumpaku/gotaface/dml"
-	"github.com/Jumpaku/gotaface/sqlite3/dml/insert"
-	"github.com/Jumpaku/gotaface/sqlite3/test"
+	"github.com/Jumpaku/gotaface/old/dml"
+	"github.com/Jumpaku/gotaface/old/sqlite3/dml/insert"
+	"github.com/Jumpaku/gotaface/old/sqlite3/test"
 	"golang.org/x/exp/slices"
 )
 

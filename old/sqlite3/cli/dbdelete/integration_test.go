@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jumpaku/gotaface/sqlite3/cli/dbdelete"
-	"github.com/Jumpaku/gotaface/sqlite3/test"
+	"github.com/Jumpaku/gotaface/old/sqlite3/cli/dbdelete"
+	"github.com/Jumpaku/gotaface/old/sqlite3/test"
 )
 
 var testInitStmt = []test.Statement{

@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jumpaku/gotaface/dml"
-	gotaface_sqlite3 "github.com/Jumpaku/gotaface/sqlite3"
-	"github.com/Jumpaku/gotaface/sqlite3/cli/dbinsert"
-	sqlite3_schema "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
-	"github.com/Jumpaku/gotaface/sqlite3/test"
+	"github.com/Jumpaku/gotaface/old/dml"
+	gotaface_sqlite3 "github.com/Jumpaku/gotaface/old/sqlite3"
+	"github.com/Jumpaku/gotaface/old/sqlite3/cli/dbinsert"
+	sqlite3_schema "github.com/Jumpaku/gotaface/old/sqlite3/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/sqlite3/test"
 	"golang.org/x/exp/slices"
 )
 

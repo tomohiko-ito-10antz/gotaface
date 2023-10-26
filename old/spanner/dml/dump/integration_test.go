@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jumpaku/gotaface/dml"
-	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
-	"github.com/Jumpaku/gotaface/spanner/dml/dump"
+	"github.com/Jumpaku/gotaface/old/dml"
+	spanner_schema "github.com/Jumpaku/gotaface/old/spanner/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/spanner/dml/dump"
 	"golang.org/x/exp/slices"
 
-	spanner_test "github.com/Jumpaku/gotaface/spanner/test"
+	spanner_test "github.com/Jumpaku/gotaface/old/spanner/test"
 
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"

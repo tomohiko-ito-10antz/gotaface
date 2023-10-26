@@ -6,8 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Jumpaku/gotaface/ddl/schema"
-	sqlite3_schema "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/ddl/schema"
+	sqlite3_schema "github.com/Jumpaku/gotaface/old/sqlite3/ddl/schema"
 	_ "github.com/mattn/go-sqlite3"
 )
 

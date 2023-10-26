@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/dml/delete"
-	gotaface_spanner "github.com/Jumpaku/gotaface/spanner"
+	"github.com/Jumpaku/gotaface/old/dml/delete"
+	gotaface_spanner "github.com/Jumpaku/gotaface/old/spanner"
 )
 
 type deleter struct {

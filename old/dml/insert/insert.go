@@ -3,7 +3,7 @@ package insert
 import (
 	"context"
 
-	"github.com/Jumpaku/gotaface/dml"
+	"github.com/Jumpaku/gotaface/old/dml"
 )
 
 type Inserter interface {

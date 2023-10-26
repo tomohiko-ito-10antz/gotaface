@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jumpaku/gotaface/spanner/cli/dbschema"
-	"github.com/Jumpaku/gotaface/spanner/ddl/schema"
-	"github.com/Jumpaku/gotaface/spanner/test"
+	"github.com/Jumpaku/gotaface/old/spanner/cli/dbschema"
+	"github.com/Jumpaku/gotaface/old/spanner/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/spanner/test"
 	"golang.org/x/exp/slices"
 )
 

@@ -11,8 +11,8 @@ import (
 	"log"
 	"os"
 
-	dbdelete_spanner "github.com/Jumpaku/gotaface/spanner/cli/dbdelete"
-	dbdelete_sqlite3 "github.com/Jumpaku/gotaface/sqlite3/cli/dbdelete"
+	dbdelete_spanner "github.com/Jumpaku/gotaface/old/spanner/cli/dbdelete"
+	dbdelete_sqlite3 "github.com/Jumpaku/gotaface/old/sqlite3/cli/dbdelete"
 
 	_ "embed"
 )

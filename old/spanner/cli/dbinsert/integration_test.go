@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/dml"
-	gotaface_spanner "github.com/Jumpaku/gotaface/spanner"
-	"github.com/Jumpaku/gotaface/spanner/cli/dbinsert"
-	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
-	"github.com/Jumpaku/gotaface/spanner/test"
+	"github.com/Jumpaku/gotaface/old/dml"
+	gotaface_spanner "github.com/Jumpaku/gotaface/old/spanner"
+	"github.com/Jumpaku/gotaface/old/spanner/cli/dbinsert"
+	spanner_schema "github.com/Jumpaku/gotaface/old/spanner/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/spanner/test"
 	"golang.org/x/exp/slices"
 )
 

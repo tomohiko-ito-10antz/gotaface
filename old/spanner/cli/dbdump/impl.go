@@ -6,9 +6,9 @@ import (
 	"io"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/dml"
-	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
-	spanner_dump "github.com/Jumpaku/gotaface/spanner/dml/dump"
+	"github.com/Jumpaku/gotaface/old/dml"
+	spanner_schema "github.com/Jumpaku/gotaface/old/spanner/ddl/schema"
+	spanner_dump "github.com/Jumpaku/gotaface/old/spanner/dml/dump"
 )
 
 type DBDumpInput = []string

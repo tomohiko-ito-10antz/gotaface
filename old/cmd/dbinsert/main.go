@@ -12,9 +12,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/Jumpaku/gotaface/dml"
-	dbinsert_spanner "github.com/Jumpaku/gotaface/spanner/cli/dbinsert"
-	//dbinsert_sqlite3 "github.com/Jumpaku/gotaface/sqlite3/cli/dbdump"
+	"github.com/Jumpaku/gotaface/old/dml"
+	dbinsert_spanner "github.com/Jumpaku/gotaface/old/spanner/cli/dbinsert"
+	//dbinsert_sqlite3 "github.com/Jumpaku/gotaface/old/sqlite3/cli/dbdump"
 )
 
 //go:embed README.md

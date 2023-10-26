@@ -9,7 +9,7 @@ import (
 
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
-	spanner_impl "github.com/Jumpaku/gotaface/spanner"
+	spanner_impl "github.com/Jumpaku/gotaface/old/spanner"
 	"golang.org/x/exp/slices"
 )
 

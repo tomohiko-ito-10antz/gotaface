@@ -9,7 +9,7 @@ import (
 
 	spanner_admin "cloud.google.com/go/spanner/admin/database/apiv1"
 	spanner_adminpb "cloud.google.com/go/spanner/admin/database/apiv1/databasepb"
-	spanner_impl "github.com/Jumpaku/gotaface/spanner"
+	spanner_impl "github.com/Jumpaku/gotaface/old/spanner"
 )
 
 func SkipIfNoEnv(t *testing.T) {

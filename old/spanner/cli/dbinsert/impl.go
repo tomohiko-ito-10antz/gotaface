@@ -6,10 +6,10 @@ import (
 	"io"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/dml"
-	spanner_impl "github.com/Jumpaku/gotaface/spanner"
-	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
-	spanner_insert "github.com/Jumpaku/gotaface/spanner/dml/insert"
+	"github.com/Jumpaku/gotaface/old/dml"
+	spanner_impl "github.com/Jumpaku/gotaface/old/spanner"
+	spanner_schema "github.com/Jumpaku/gotaface/old/spanner/ddl/schema"
+	spanner_insert "github.com/Jumpaku/gotaface/old/spanner/dml/insert"
 )
 
 type InsertRows = interface {

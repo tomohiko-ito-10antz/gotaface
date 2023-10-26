@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Jumpaku/gotaface/errors"
+	"github.com/Jumpaku/gotaface/old/errors"
 )
 
 type JsonType int

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Jumpaku/gotaface/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/ddl/schema"
 	"github.com/davecgh/go-spew/spew"
 	"golang.org/x/exp/slices"
 )

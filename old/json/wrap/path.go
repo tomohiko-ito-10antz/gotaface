@@ -3,7 +3,7 @@ package wrap
 import (
 	"strconv"
 
-	"github.com/Jumpaku/gotaface/errors"
+	"github.com/Jumpaku/gotaface/old/errors"
 	"golang.org/x/exp/slices"
 )
 

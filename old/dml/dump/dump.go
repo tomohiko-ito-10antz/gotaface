@@ -3,7 +3,7 @@ package dump
 import (
 	"context"
 
-	"github.com/Jumpaku/gotaface/dml"
+	"github.com/Jumpaku/gotaface/old/dml"
 )
 
 type Dumper interface {

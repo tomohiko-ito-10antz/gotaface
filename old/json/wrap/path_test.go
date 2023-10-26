@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Jumpaku/gotaface/json/wrap"
-	"github.com/Jumpaku/gotaface/test/assert"
+	"github.com/Jumpaku/gotaface/old/json/wrap"
+	"github.com/Jumpaku/gotaface/old/test/assert"
 )
 
 func TestKey_String(t *testing.T) {

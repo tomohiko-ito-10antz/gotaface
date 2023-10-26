@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Jumpaku/gotaface/dbsql"
-	"github.com/Jumpaku/gotaface/dml/delete"
+	"github.com/Jumpaku/gotaface/old/dbsql"
+	"github.com/Jumpaku/gotaface/old/dml/delete"
 )
 
 type deleter struct {

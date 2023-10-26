@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Jumpaku/gotaface/sqlite3/dml/delete"
-	"github.com/Jumpaku/gotaface/sqlite3/test"
+	"github.com/Jumpaku/gotaface/old/sqlite3/dml/delete"
+	"github.com/Jumpaku/gotaface/old/sqlite3/test"
 )
 
 func TestMain(m *testing.M) {

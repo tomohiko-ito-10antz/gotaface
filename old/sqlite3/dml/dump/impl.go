@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Jumpaku/gotaface/dbsql"
-	"github.com/Jumpaku/gotaface/ddl/schema"
-	"github.com/Jumpaku/gotaface/dml"
-	"github.com/Jumpaku/gotaface/dml/dump"
-	"github.com/Jumpaku/gotaface/sqlite3"
-	sqlite3_schema "github.com/Jumpaku/gotaface/sqlite3/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/dbsql"
+	"github.com/Jumpaku/gotaface/old/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/dml"
+	"github.com/Jumpaku/gotaface/old/dml/dump"
+	"github.com/Jumpaku/gotaface/old/sqlite3"
+	sqlite3_schema "github.com/Jumpaku/gotaface/old/sqlite3/ddl/schema"
 	"golang.org/x/exp/slices"
 )
 

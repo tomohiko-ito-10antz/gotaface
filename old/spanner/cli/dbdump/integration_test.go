@@ -11,10 +11,10 @@ import (
 
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/dml"
-	"github.com/Jumpaku/gotaface/spanner/cli/dbdump"
-	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
-	"github.com/Jumpaku/gotaface/spanner/test"
+	"github.com/Jumpaku/gotaface/old/dml"
+	"github.com/Jumpaku/gotaface/old/spanner/cli/dbdump"
+	spanner_schema "github.com/Jumpaku/gotaface/old/spanner/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/spanner/test"
 	"golang.org/x/exp/slices"
 )
 

@@ -9,11 +9,11 @@ import (
 
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/dml"
+	"github.com/Jumpaku/gotaface/old/dml"
 	"golang.org/x/exp/slices"
 
-	"github.com/Jumpaku/gotaface/spanner/dml/insert"
-	spanner_test "github.com/Jumpaku/gotaface/spanner/test"
+	"github.com/Jumpaku/gotaface/old/spanner/dml/insert"
+	spanner_test "github.com/Jumpaku/gotaface/old/spanner/test"
 )
 
 func TestMain(m *testing.M) {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Jumpaku/gotaface/dbsql"
+	"github.com/Jumpaku/gotaface/old/dbsql"
 )
 
 func newType[T any]() reflect.Type {

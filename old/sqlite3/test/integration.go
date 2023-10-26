@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/Jumpaku/gotaface/dbsql"
+	"github.com/Jumpaku/gotaface/old/dbsql"
 	_ "github.com/mattn/go-sqlite3"
 )
 

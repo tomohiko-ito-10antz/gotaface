@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Jumpaku/gotaface/dbsql"
-	"github.com/Jumpaku/gotaface/dml"
-	"github.com/Jumpaku/gotaface/dml/insert"
+	"github.com/Jumpaku/gotaface/old/dbsql"
+	"github.com/Jumpaku/gotaface/old/dml"
+	"github.com/Jumpaku/gotaface/old/dml/insert"
 )
 
 type inserter struct {

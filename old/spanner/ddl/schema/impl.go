@@ -8,8 +8,8 @@ import (
 	"io"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/ddl/schema"
-	gotaface_spanner "github.com/Jumpaku/gotaface/spanner"
+	"github.com/Jumpaku/gotaface/old/ddl/schema"
+	gotaface_spanner "github.com/Jumpaku/gotaface/old/spanner"
 	"golang.org/x/exp/slices"
 )
 

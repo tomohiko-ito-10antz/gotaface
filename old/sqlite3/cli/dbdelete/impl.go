@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	sqlite3_delete "github.com/Jumpaku/gotaface/sqlite3/dml/delete"
+	sqlite3_delete "github.com/Jumpaku/gotaface/old/sqlite3/dml/delete"
 )
 
 type DBDeleteInput = []string

@@ -3,7 +3,7 @@ package errors_test
 import (
 	"testing"
 
-	"github.com/Jumpaku/gotaface/errors"
+	"github.com/Jumpaku/gotaface/old/errors"
 )
 
 func TestAssert_OK(t *testing.T) {

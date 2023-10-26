@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/spanner/cli/dbdelete"
-	"github.com/Jumpaku/gotaface/spanner/test"
+	"github.com/Jumpaku/gotaface/old/spanner/cli/dbdelete"
+	"github.com/Jumpaku/gotaface/old/spanner/test"
 )
 
 var testDDLs = []string{`

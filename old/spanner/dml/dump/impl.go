@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"cloud.google.com/go/spanner"
-	"github.com/Jumpaku/gotaface/dml"
-	"github.com/Jumpaku/gotaface/dml/dump"
-	gotaface_spanner "github.com/Jumpaku/gotaface/spanner"
-	spanner_schema "github.com/Jumpaku/gotaface/spanner/ddl/schema"
+	"github.com/Jumpaku/gotaface/old/dml"
+	"github.com/Jumpaku/gotaface/old/dml/dump"
+	gotaface_spanner "github.com/Jumpaku/gotaface/old/spanner"
+	spanner_schema "github.com/Jumpaku/gotaface/old/spanner/ddl/schema"
 )
 
 type dumper struct {

@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Jumpaku/gotaface/sqlite3"
+	"github.com/Jumpaku/gotaface/old/sqlite3"
 	"golang.org/x/exp/slices"
 )
 
